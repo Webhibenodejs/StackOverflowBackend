@@ -180,11 +180,63 @@ const single_ques_fetch = (req, res) => {
         });
 }
 
+const no_answered_ques = (req, res) => {
+    // return Question.aggregate([
+    //     {
+    //         $match: { isDeleted: false, status: true }
+    //     },
+    //     {
+    //         $project: {
+    //             __v: 0,
+    //             status: 0,
+    //             isDeleted: 0
+    //         },
+    //     },
+    //     {
+    //         $lookup: {
+    //             from: "answers",
+    //             localField: "_id",
+    //             foreignField: "questionId",
+    //             pipeline: [
+    //                 { $match: { "isDeleted": false } },
+    //                 {
+    //                     $project: {
+    //                         __v: 0,
+    //                         isDeleted: 0,
+    //                         questionId: 0
+    //                     },
+    //                 }
+    //             ],
+    //             as: "answers"
+    //         }
+    //     }
+    // ])
+    //     .then((data) => {
+    //         // console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>',data);
+    //         // return false
+    //         return res.status(200).json({
+    //             status: true,
+    //             // data: data[0].answers.length,
+    //             data: data,
+    //             error: null
+    //         });
+    //     })
+    //     .catch((error) => {
+    //         return res.status(200).json({
+    //             status: false,
+    //             data: null,
+    //             error: "Something Went Wrong !!!",
+    //             error_code : error
+    //         });
+    //     });
+}
+
 
 module.exports = {
     create,
     viewall,
     update_data,
     delete_data,
-    single_ques_fetch
+    single_ques_fetch,
+    no_answered_ques
 }
