@@ -7,7 +7,8 @@ const AnswerSchema = new mongoose.Schema({
     },
     userId: {
         type:  mongoose.Schema.Types.ObjectId,
-        required: true
+        // required: true,
+        default : "62874a3c7c343db81a53ec2e"
     },
     userTypeGuest: {
         type: Boolean,
@@ -15,13 +16,13 @@ const AnswerSchema = new mongoose.Schema({
     },
     name: {
         type: String,
-        required: true
-        // default : null
+        // required: true,
+        default : null
     },
     email: {
         type: String,
-        required: true
-        // default : null
+        // required: true,
+        default : null
     },
     answer: {
         type: String,

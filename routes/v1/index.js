@@ -28,7 +28,7 @@ router.post('/create_question',QuestionController.create)
 router.get('/view_question',QuestionController.viewall)
 router.put('/update_question/:id',QuestionController.update_data)
 router.delete('/delete_question/:id',QuestionController.delete_data)
-router.get('/single_question_fetch/:id',QuestionController.single_ques_fetch)
+router.get('/single-question-fetch/:id',QuestionController.single_ques_fetch)
 // questions crud end
 
 // answers crud start

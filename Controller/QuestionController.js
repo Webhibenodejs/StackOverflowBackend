@@ -1,5 +1,4 @@
 const Question = require("../Model/Question");
-const Answer = require("../Model/Answer");
 var mongoose = require('mongoose');
 
 
@@ -129,46 +128,55 @@ const delete_data = (req, res) => {
 const single_ques_fetch = (req, res) => {
     return Question.aggregate([
         {
-            $match: { "_id": mongoose.Types.ObjectId(req.params.id), "status" : true, "isDeleted" : false }
+            $match: { "_id": mongoose.Types.ObjectId(req.params.id), "status": true, "isDeleted": false }
         },
         {
             $project: {
                 __v: 0,
-                status : 0,
-                isDeleted : 0
+                status: 0,
+                isDeleted: 0
             },
         },
-        // {
-        //     $lookup : {
-        //         from: Answer,
-        //         localField: <field from the input documents>,
-        //         // foreignField: <field from the documents of the "from" collection>,
-        //         // as: <output array field></output>
-        //     }
-        // }
+        {
+            $lookup: {
+                from: "answers",
+                localField: "_id",
+                foreignField: "questionId",
+                pipeline: [
+                    { $match: { "isDeleted": false } },
+                    {
+                        $project: {
+                            __v: 0,
+                            isDeleted: 0,
+                            questionId: 0
+                        },
+                    }
+                ],
+                as: "answers"
+            }
+        },
     ])
         .then((data) => {
-            console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>',data);
-            // if (data.length == 0) {
-            //     return res.status(200).json({
-            //         status: false,
-            //         data: null,
-            //         error: "User Not Found !!!"
-            //     });
-            // } else {
-            //     return res.status(200).json({
-            //         status: true,
-            //         data: data[0],
-            //         error: null
-            //     });
-            // }
+            if (data.length == 0) {
+                return res.status(200).json({
+                    status: false,
+                    data: null,
+                    error: "No Questions Found !!!"
+                });
+            } else {
+                return res.status(200).json({
+                    status: true,
+                    data: data[0],
+                    error: null
+                });
+            }
         })
         .catch((error) => {
-            // return res.status(200).json({
-            //     status: false,
-            //     data: null,
-            //     error: "Something Went Wrong !!"
-            // });
+            return res.status(200).json({
+                status: false,
+                data: null,
+                error: "Something Went Wrong !!",
+            });
         });
 }
 

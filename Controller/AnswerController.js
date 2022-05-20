@@ -1,5 +1,6 @@
 var mongoose = require('mongoose');
 const Answer = require("../Model/Answer");
+const User = require("../Model/User");
 
 
 
@@ -7,17 +8,15 @@ const Answer = require("../Model/Answer");
 const create = (req, res) => {
     let dataSet = {
         questionId: req.body.questionId,
-        userId: req.body.userId,
+        userId: mongoose.Types.ObjectId('62874a427c343db81a53ec30'),
         userTypeGuest: req.body.userTypeGuest,
-        name: req.body.name,
-        email: req.body.email,
+        name: req.body.name || "user_name",
+        email: req.body.email || "guest_email",
         answer: req.body.answer,
         createOn: new Date()
     }
-
-    
-
     const dataModel = new Answer(dataSet);
+
     dataModel.save()
         .then((result) => {
             return res.send({
@@ -30,7 +29,7 @@ const create = (req, res) => {
                 status: false,
                 data: null,
                 error: "Something Went Wrong !!!",
-                error_test: err
+                error_code : err
             })
         });
 }
@@ -52,13 +51,13 @@ const viewall = (req, res) => {
             return res.status(200).json({
                 status: true,
                 data: data,
-                error : null
+                error: null
             });
         })
         .catch((error) => {
             return res.status(200).json({
                 status: false,
-                data : null,
+                data: null,
                 error: "Something Went Wrong !!!",
             });
         });
@@ -89,7 +88,7 @@ const delete_data = (req, res) => {
             return res.status(200).json({
                 success: true,
                 data: data,
-                error : null
+                error: null
             });
         })
         .catch((error) => {
