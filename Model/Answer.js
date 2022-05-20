@@ -15,11 +15,13 @@ const AnswerSchema = new mongoose.Schema({
     },
     name: {
         type: String,
-        default : null
+        required: true
+        // default : null
     },
     email: {
         type: String,
-        default : null
+        required: true
+        // default : null
     },
     answer: {
         type: String,

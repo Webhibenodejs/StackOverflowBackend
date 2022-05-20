@@ -1,23 +1,13 @@
+const Tag = require("../Model/Tag");
 var mongoose = require('mongoose');
-const Answer = require("../Model/Answer");
-
-
 
 
 const create = (req, res) => {
     let dataSet = {
-        questionId: req.body.questionId,
-        userId: req.body.userId,
-        userTypeGuest: req.body.userTypeGuest,
-        name: req.body.name,
-        email: req.body.email,
-        answer: req.body.answer,
+        tag: req.body.tag,
         createOn: new Date()
     }
-
-    
-
-    const dataModel = new Answer(dataSet);
+    const dataModel = new Tag(dataSet);
     dataModel.save()
         .then((result) => {
             return res.send({
@@ -29,17 +19,21 @@ const create = (req, res) => {
             return res.send({
                 status: false,
                 data: null,
-                error: "Something Went Wrong !!!",
-                error_test: err
+                error: "Something Went Wrong !!"
             })
         });
 }
 
 const viewall = (req, res) => {
-    return Answer.aggregate([
+    return Tag.aggregate([
+        {
+            $match: { isDeleted: false, status: true }
+        },
         {
             $project: {
                 __v: 0,
+                status: 0,
+                isDeleted: 0
             },
         },
         {
@@ -52,20 +46,20 @@ const viewall = (req, res) => {
             return res.status(200).json({
                 status: true,
                 data: data,
-                error : null
+                error: null
             });
         })
         .catch((error) => {
             return res.status(200).json({
                 status: false,
-                data : null,
+                data: null,
                 error: "Something Went Wrong !!!",
             });
         });
 }
 
 const update_data = (req, res) => {
-    return Answer.findOneAndUpdate(
+    return Tag.findOneAndUpdate(
         { "_id": mongoose.Types.ObjectId(req.params.id) },
         { $set: req.body }
     ).then((result) => {
@@ -84,23 +78,28 @@ const update_data = (req, res) => {
 }
 
 const delete_data = (req, res) => {
-    return Answer.remove({ _id: { $in: [mongoose.Types.ObjectId(req.params.id)] } })
-        .then((data) => {
-            return res.status(200).json({
-                success: true,
-                data: data,
-                error : null
-            });
+   
+    return Tag.findOneAndUpdate(
+        { "_id": mongoose.Types.ObjectId(req.params.id) },
+        { isDeleted: true }
+    ).then((result) => {
+        return res.send({
+            status: true,
+            data: { ...result._doc, ...{ isDeleted: true } },
+            error: null
         })
-        .catch((error) => {
-            res.status(500).json({
-                success: false,
-                data: null,
-                error: "Delete Failed !!!"
-            });
-        });
-}
+    }).catch((err) => {
+        return res.send({
+            status: false,
+            data: null,
+            error: "Delete Failed !!!!"
+        })
+    });
 
+
+
+
+}
 
 
 module.exports = {
@@ -108,4 +107,5 @@ module.exports = {
     viewall,
     update_data,
     delete_data
+   
 }

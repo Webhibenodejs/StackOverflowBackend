@@ -7,6 +7,7 @@ const AnswerController = require('../../Controller/AnswerController')
 const UserController = require('../../Controller/UserController')
 const SignupController = require('../../Controller/Auth/SignUpController')
 const LoginController = require('../../Controller/Auth/LoginController')
+const TagController = require('../../Controller/TagController')
 
 
 /* GET home page. */
@@ -27,6 +28,7 @@ router.post('/create_question',QuestionController.create)
 router.get('/view_question',QuestionController.viewall)
 router.put('/update_question/:id',QuestionController.update_data)
 router.delete('/delete_question/:id',QuestionController.delete_data)
+router.get('/single_question_fetch/:id',QuestionController.single_ques_fetch)
 // questions crud end
 
 // answers crud start
@@ -46,8 +48,14 @@ router.get('/view_single_user/:id',UserController.single_use_fetch)
 router.post('/signup',SignupController.create)
 
 // login
-router.get('/login',LoginController.login)
+router.post('/login',LoginController.login)
 
-
+// Tag crud start
+router.post('/tag_create', TagController.create)
+router.get('/tag_view', TagController.viewall)
+router.put('/tag_update/:id', TagController.update_data)
+router.delete('/tag_delete/:id', TagController.delete_data)
+// Tag crud end
 
 module.exports = router;
+

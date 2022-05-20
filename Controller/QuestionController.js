@@ -1,4 +1,5 @@
 const Question = require("../Model/Question");
+const Answer = require("../Model/Answer");
 var mongoose = require('mongoose');
 
 
@@ -7,7 +8,7 @@ var mongoose = require('mongoose');
 const create = (req, res) => {
     let dataSet = {
         title: req.body.title,
-        userId : req.body.userId,
+        userId: req.body.userId,
         category: req.body.category,
         tag: req.body.tag,
         description: req.body.description,
@@ -26,7 +27,7 @@ const create = (req, res) => {
                 status: false,
                 data: null,
                 error: err,
-                error_test : req.body
+                error_test: req.body
             })
         });
 }
@@ -34,13 +35,13 @@ const create = (req, res) => {
 const viewall = (req, res) => {
     return Question.aggregate([
         {
-            $match : { isDeleted : false, status : true }
+            $match: { isDeleted: false, status: true }
         },
         {
             $project: {
                 __v: 0,
-                status : 0,
-                isDeleted : 0
+                status: 0,
+                isDeleted: 0
             },
         },
         {
@@ -53,13 +54,13 @@ const viewall = (req, res) => {
             return res.status(200).json({
                 status: true,
                 data: data,
-                error : null
+                error: null
             });
         })
         .catch((error) => {
             return res.status(200).json({
                 status: false,
-                data : null,
+                data: null,
                 error: "Something Went Wrong !!!",
             });
         });
@@ -104,11 +105,11 @@ const delete_data = (req, res) => {
     return Question.findOneAndUpdate(
         { "_id": mongoose.Types.ObjectId(req.params.id) },
         // { $set: req.body }
-        { isDeleted : true }
+        { isDeleted: true }
     ).then((result) => {
         return res.send({
             status: true,
-            data: { ...result._doc, ...{isDeleted : true} },
+            data: { ...result._doc, ...{ isDeleted: true } },
             error: null
         })
     }).catch((err) => {
@@ -125,10 +126,57 @@ const delete_data = (req, res) => {
 }
 
 
+const single_ques_fetch = (req, res) => {
+    return Question.aggregate([
+        {
+            $match: { "_id": mongoose.Types.ObjectId(req.params.id), "status" : true, "isDeleted" : false }
+        },
+        {
+            $project: {
+                __v: 0,
+                status : 0,
+                isDeleted : 0
+            },
+        },
+        // {
+        //     $lookup : {
+        //         from: Answer,
+        //         localField: <field from the input documents>,
+        //         // foreignField: <field from the documents of the "from" collection>,
+        //         // as: <output array field></output>
+        //     }
+        // }
+    ])
+        .then((data) => {
+            console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>',data);
+            // if (data.length == 0) {
+            //     return res.status(200).json({
+            //         status: false,
+            //         data: null,
+            //         error: "User Not Found !!!"
+            //     });
+            // } else {
+            //     return res.status(200).json({
+            //         status: true,
+            //         data: data[0],
+            //         error: null
+            //     });
+            // }
+        })
+        .catch((error) => {
+            // return res.status(200).json({
+            //     status: false,
+            //     data: null,
+            //     error: "Something Went Wrong !!"
+            // });
+        });
+}
+
 
 module.exports = {
     create,
     viewall,
     update_data,
-    delete_data
+    delete_data,
+    single_ques_fetch
 }

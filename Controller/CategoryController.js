@@ -119,17 +119,6 @@ const delete_data = (req, res) => {
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
 module.exports = {
     create,
     viewall,
