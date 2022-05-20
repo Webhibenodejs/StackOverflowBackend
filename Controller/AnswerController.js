@@ -6,14 +6,19 @@ const Answer = require("../Model/Answer");
 
 const create = (req, res) => {
     let dataSet = {
-        question_id: req.body.question_id,
-        user_id: req.body.user_id,
-        user_type_guest: req.body.user_type_guest,
+        questionId: req.body.questionId,
+        userId: req.body.userId,
+        userTypeGuest: req.body.userTypeGuest,
         name: req.body.name,
         email: req.body.email,
         answer: req.body.answer,
         createOn: new Date()
     }
+
+    console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>',dataSet);
+
+
+
     const dataModel = new Answer(dataSet);
     dataModel.save()
         .then((result) => {
@@ -26,7 +31,8 @@ const create = (req, res) => {
             return res.send({
                 status: false,
                 data: null,
-                error: "Something Went Wrong !!!"
+                error: "Something Went Wrong !!!",
+                error_test: err
             })
         });
 }

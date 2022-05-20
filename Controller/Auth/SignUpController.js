@@ -4,7 +4,7 @@ const create = (req, res) => {
     let dataSet = {
         name: req.body.name,
         email: req.body.email,
-        password: passwordHash.generate(req.body.password),
+        password: req.body.password,
         terms_conditions: req.body.terms_conditions,
         createOn: new Date()
     }

@@ -14,6 +14,18 @@ const UserSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    image: {
+        type : String,
+        default : "https://templates.envytheme.com/pify/default/assets/images/user/user-15.jpg"
+    },
+    status : {
+        type : Boolean,
+        default : true
+    },
+    isDeleted: {
+        type : Boolean,
+        default : false
+    },
     createOn: {
         type: Date
     }

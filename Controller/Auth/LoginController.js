@@ -4,19 +4,17 @@ var passwordHash = require('password-hash');
 
 const login = (req, res) => {
   
-    console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>',passwordHash.generate(req.body.password));
-    console.log(passwordHash.verify('123', passwordHash.generate(req.body.password)));
-    return false;
+    // console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>',passwordHash.generate(req.body.password));
+    // console.log(passwordHash.verify('123', passwordHash.generate(req.body.password)));
+    // return false;
     return User.aggregate([
         {
-            $match : { email : req.body.email }
-        },
-        {
-            $match : { password : req.body.password } 
+            $match : { email : req.body.email, password : req.body.password, status : true, isDeleted : false }
         },
         {
             $project: {
                 __v: 0,
+                password : 0
             },
         }
     ])

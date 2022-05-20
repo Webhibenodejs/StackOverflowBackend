@@ -1,15 +1,15 @@
 var mongoose = require('mongoose')
 
 const AnswerSchema = new mongoose.Schema({
-    question_id: {
-        type: String,
+    questionId: {
+        type:  mongoose.Schema.Types.ObjectId,
         required: true
     },
-    user_id: {
-        type: String,
+    userId: {
+        type:  mongoose.Schema.Types.ObjectId,
         required: true
     },
-    user_type_guest: {
+    userTypeGuest: {
         type: Boolean,
         required: true
     },
@@ -24,6 +24,10 @@ const AnswerSchema = new mongoose.Schema({
     answer: {
         type: String,
         required: true
+    },
+    isDeleted: {
+        type : Boolean,
+        default : false
     },
     createOn: {
         type: Date

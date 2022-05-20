@@ -2,8 +2,6 @@ const Category = require("../Model/Category");
 var mongoose = require('mongoose');
 
 
-
-
 const create = (req, res) => {
     let dataSet = {
         name: req.body.cat_name,
@@ -29,8 +27,13 @@ const create = (req, res) => {
 const viewall = (req, res) => {
     return Category.aggregate([
         {
+            $match : { isDeleted : false, status : true }
+        },
+        {
             $project: {
                 __v: 0,
+                status : 0,
+                isDeleted : 0
             },
         },
         {
@@ -75,21 +78,44 @@ const update_data = (req, res) => {
 }
 
 const delete_data = (req, res) => {
-    return Category.remove({ _id: { $in: [mongoose.Types.ObjectId(req.params.id)] } })
-        .then((data) => {
-            return res.status(200).json({
-                success: true,
-                data: data,
-                error : null
-            });
+    // return Category.remove({ _id: { $in: [mongoose.Types.ObjectId(req.params.id)] } })
+    //     .then((data) => {
+    //         return res.status(200).json({
+    //             success: true,
+    //             data: data,
+    //             error : null
+    //         });
+    //     })
+    //     .catch((error) => {
+    //         res.status(500).json({
+    //             success: false,
+    //             data: null,
+    //             error: "Delete Failed !!!"
+    //         });
+    //     });
+
+ 
+    return Category.findOneAndUpdate(
+        { "_id": mongoose.Types.ObjectId(req.params.id) },
+        // { $set: req.body }
+        { isDeleted : true }
+    ).then((result) => {
+        return res.send({
+            status: true,
+            data: { ...result._doc, ...{isDeleted : true} },
+            error: null
         })
-        .catch((error) => {
-            res.status(500).json({
-                success: false,
-                data: null,
-                error: "Delete Failed !!!"
-            });
-        });
+    }).catch((err) => {
+        return res.send({
+            status: false,
+            data: null,
+            error: "Delete Failed !!!!"
+        })
+    });
+
+
+
+
 }
 
 

@@ -7,6 +7,7 @@ var mongoose = require('mongoose');
 const create = (req, res) => {
     let dataSet = {
         title: req.body.title,
+        userId : req.body.userId,
         category: req.body.category,
         tag: req.body.tag,
         description: req.body.description,
@@ -33,8 +34,13 @@ const create = (req, res) => {
 const viewall = (req, res) => {
     return Question.aggregate([
         {
+            $match : { isDeleted : false, status : true }
+        },
+        {
             $project: {
                 __v: 0,
+                status : 0,
+                isDeleted : 0
             },
         },
         {
@@ -79,21 +85,43 @@ const update_data = (req, res) => {
 }
 
 const delete_data = (req, res) => {
-    return Question.remove({ _id: { $in: [mongoose.Types.ObjectId(req.params.id)] } })
-        .then((data) => {
-            return res.status(200).json({
-                success: true,
-                data: data,
-                error : null
-            });
+    // return Question.remove({ _id: { $in: [mongoose.Types.ObjectId(req.params.id)] } })
+    //     .then((data) => {
+    //         return res.status(200).json({
+    //             success: true,
+    //             data: data,
+    //             error : null
+    //         });
+    //     })
+    //     .catch((error) => {
+    //         res.status(500).json({
+    //             success: false,
+    //             data: null,
+    //             error: "Delete Failed !!!"
+    //         });
+    //     });
+
+    return Question.findOneAndUpdate(
+        { "_id": mongoose.Types.ObjectId(req.params.id) },
+        // { $set: req.body }
+        { isDeleted : true }
+    ).then((result) => {
+        return res.send({
+            status: true,
+            data: { ...result._doc, ...{isDeleted : true} },
+            error: null
         })
-        .catch((error) => {
-            res.status(500).json({
-                success: false,
-                data: null,
-                error: "Delete Failed !!!"
-            });
-        });
+    }).catch((err) => {
+        return res.send({
+            status: false,
+            data: null,
+            error: "Delete Failed !!!!"
+        })
+    });
+
+
+
+
 }
 
 

@@ -39,12 +39,15 @@ router.delete('/delete_answer/:id',AnswerController.delete_data)
 
 // get all user 
 router.get('/view_user',UserController.viewall_user)
+// single user fetch
+router.get('/view_single_user/:id',UserController.single_use_fetch)
 
 // signup
 router.post('/signup',SignupController.create)
 
 // login
 router.get('/login',LoginController.login)
+
 
 
 module.exports = router;
