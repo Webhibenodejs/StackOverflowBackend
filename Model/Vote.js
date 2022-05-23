@@ -1,32 +1,19 @@
 var mongoose = require('mongoose')
-const Tag = new mongoose.Schema({
-    tagId : {
-        type : mongoose.Schema.Types.ObjectId,
-        required: true
-    }
-});
 
-
-
-
-const QuestionSchema = new mongoose.Schema({
+const VoteSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
     },
-    title: {
-        type: String,
-        required: true
-    },
-    category: {
+    ques_ans_id: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
     },
-    tag: {
-        type: [Tag],
+    ques_ans_type: {
+        type: String,
         required: true
     },
-    description: {
+    like_dislike_type: {
         type: String,
         required: true
     },
@@ -43,4 +30,4 @@ const QuestionSchema = new mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model('Question', QuestionSchema );
+module.exports = mongoose.model('Vote', VoteSchema );

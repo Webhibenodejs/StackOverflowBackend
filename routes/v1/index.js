@@ -8,6 +8,9 @@ const UserController = require('../../Controller/UserController')
 const SignupController = require('../../Controller/Auth/SignUpController')
 const LoginController = require('../../Controller/Auth/LoginController')
 const TagController = require('../../Controller/TagController')
+const VoteController = require('../../Controller/VoteController')
+const BlogController = require('../../Controller/BlogController')
+
 
 
 /* GET home page. */
@@ -36,9 +39,8 @@ router.get('/unanswered-question',QuestionController.no_answered_ques)
 router.post('/create_answer',AnswerController.create)
 router.get('/view_answer',AnswerController.viewall)
 router.put('/update_answer/:id',AnswerController.update_data)
-router.delete('/delete_answer/:id',AnswerController.delete_data)
+router.put('/delete_answer/:id',AnswerController.delete_data)
 // answer crud end
-
 
 // get all user 
 router.get('/view_user',UserController.viewall_user)
@@ -55,8 +57,22 @@ router.post('/login',LoginController.login)
 router.post('/tag_create', TagController.create)
 router.get('/tag_view', TagController.viewall)
 router.put('/tag_update/:id', TagController.update_data)
-router.delete('/tag_delete/:id', TagController.delete_data)
+router.put('/tag_delete/:id', TagController.delete_data)
 // Tag crud end
+
+
+// vote crud start
+router.post('/create_vote', VoteController.create)
+// vote crud end
+
+
+// blog crud start
+router.post('/blog_create', BlogController.create)
+router.get('/blog_view_all', BlogController.viewall)
+router.put('/blog_update/:id', BlogController.update_data)
+router.put('/blog_delete/:id', BlogController.delete_data)
+// blog crud end
+
 
 module.exports = router;
 

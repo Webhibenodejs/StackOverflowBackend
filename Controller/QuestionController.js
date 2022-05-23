@@ -25,8 +25,7 @@ const create = (req, res) => {
             return res.send({
                 status: false,
                 data: null,
-                error: err,
-                error_test: req.body
+                error: err
             })
         });
 }
@@ -37,17 +36,60 @@ const viewall = (req, res) => {
             $match: { isDeleted: false, status: true }
         },
         {
-            $project: {
-                __v: 0,
-                status: 0,
-                isDeleted: 0
-            },
+            $lookup: {
+                from: "categories",
+                localField: "category",
+                foreignField: "_id",
+                pipeline: [
+                    {
+                        $project: {
+                            __v: 0,
+                            isDeleted: 0,
+                            _id: 0,
+                            status: 0,
+                            createOn: 0
+                        },
+                    }
+                ],
+                as: "categoryDetails"
+            }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "userId",
+                foreignField: "_id",
+                pipeline: [
+                    {
+                        $project: {
+                            __v: 0,
+                            _id: 0,
+                            email: 0,
+                            password: 0,
+                            status: 0,
+                            isDeleted: 0,
+                            createOn: 0
+                        },
+                    }
+                ],
+                as: "userDetails"
+            }
         },
         {
             $sort: {
                 _id: -1
             }
-        }
+        },
+        {
+            $project: {
+                __v: 0,
+                status: 0,
+                isDeleted: 0
+            }
+        },
+        { $unwind: "$userDetails" },
+        { $unwind: "$categoryDetails" }
+
     ])
         .then((data) => {
             return res.status(200).json({
@@ -139,6 +181,46 @@ const single_ques_fetch = (req, res) => {
         },
         {
             $lookup: {
+                from: "categories",
+                localField: "category",
+                foreignField: "_id",
+                pipeline: [
+                    {
+                        $project: {
+                            __v: 0,
+                            isDeleted: 0,
+                            _id: 0,
+                            status: 0,
+                            createOn: 0
+                        },
+                    }
+                ],
+                as: "categoryDetails"
+            }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "userId",
+                foreignField: "_id",
+                pipeline: [
+                    {
+                        $project: {
+                            __v: 0,
+                            _id: 0,
+                            email: 0,
+                            password: 0,
+                            status: 0,
+                            isDeleted: 0,
+                            createOn: 0
+                        },
+                    }
+                ],
+                as: "userDetails"
+            }
+        },
+        {
+            $lookup: {
                 from: "answers",
                 localField: "_id",
                 foreignField: "questionId",
@@ -155,6 +237,8 @@ const single_ques_fetch = (req, res) => {
                 as: "answers"
             }
         },
+        { $unwind: "$userDetails" },
+        { $unwind: "$categoryDetails" }
     ])
         .then((data) => {
             if (data.length == 0) {
@@ -181,54 +265,56 @@ const single_ques_fetch = (req, res) => {
 }
 
 const no_answered_ques = (req, res) => {
-    // return Question.aggregate([
-    //     {
-    //         $match: { isDeleted: false, status: true }
-    //     },
-    //     {
-    //         $project: {
-    //             __v: 0,
-    //             status: 0,
-    //             isDeleted: 0
-    //         },
-    //     },
-    //     {
-    //         $lookup: {
-    //             from: "answers",
-    //             localField: "_id",
-    //             foreignField: "questionId",
-    //             pipeline: [
-    //                 { $match: { "isDeleted": false } },
-    //                 {
-    //                     $project: {
-    //                         __v: 0,
-    //                         isDeleted: 0,
-    //                         questionId: 0
-    //                     },
-    //                 }
-    //             ],
-    //             as: "answers"
-    //         }
-    //     }
-    // ])
-    //     .then((data) => {
-    //         // console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>',data);
-    //         // return false
-    //         return res.status(200).json({
-    //             status: true,
-    //             // data: data[0].answers.length,
-    //             data: data,
-    //             error: null
-    //         });
-    //     })
-    //     .catch((error) => {
-    //         return res.status(200).json({
-    //             status: false,
-    //             data: null,
-    //             error: "Something Went Wrong !!!",
-    //             error_code : error
-    //         });
-    //     });
+    return Question.aggregate([
+        {
+            $match: { isDeleted: false, status: true }
+        },
+        {
+            $project: {
+                __v: 0,
+                status: 0,
+                isDeleted: 0
+            },
+        },
+        {
+            $lookup: {
+                from: "answers",
+                localField: "_id",
+                foreignField: "questionId",
+                pipeline: [
+                    { $match: { "isDeleted": false } },
+                    {
+                        $project: {
+                            __v: 0,
+                            isDeleted: 0,
+                            questionId: 0
+                        },
+                    }
+                ],
+                as: "answers"
+            }
+        },
+        {
+            $count: "total_count222"
+        }
+    ])
+        .then((data) => {
+            return res.status(200).json({
+                status: true,
+                // data: data[0].answers.length,
+                data: data,
+                error: null,
+
+            });
+        })
+        .catch((error) => {
+            return res.status(200).json({
+                status: false,
+                data: null,
+                error: "Something Went Wrong !!!",
+                error_code: error
+            });
+        });
 }
 
 
