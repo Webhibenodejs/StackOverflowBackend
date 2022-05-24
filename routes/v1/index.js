@@ -10,6 +10,7 @@ const LoginController = require('../../Controller/Auth/LoginController')
 const TagController = require('../../Controller/TagController')
 const VoteController = require('../../Controller/VoteController')
 const BlogController = require('../../Controller/BlogController')
+const FollowController = require('../../Controller/FollowController')
 
 
 
@@ -33,6 +34,7 @@ router.put('/update_question/:id',QuestionController.update_data)
 router.delete('/delete_question/:id',QuestionController.delete_data)
 router.get('/single-question-fetch/:id',QuestionController.single_ques_fetch)
 router.get('/unanswered-question',QuestionController.no_answered_ques)
+router.get('/category-wise-all-question',QuestionController.no_answered_ques)
 // questions crud end
 
 // answers crud start
@@ -46,6 +48,11 @@ router.put('/delete_answer/:id',AnswerController.delete_data)
 router.get('/view_user',UserController.viewall_user)
 // single user fetch
 router.get('/view_single_user/:id',UserController.single_use_fetch)
+// user profile update
+router.put('/update_user/:id',UserController.update_data)
+// user password change
+router.put('/update_password/:id',UserController.update_password)
+
 
 // signup
 router.post('/signup',SignupController.create)
@@ -61,10 +68,13 @@ router.put('/tag_delete/:id', TagController.delete_data)
 // Tag crud end
 
 
-// vote crud start
+// vote start
 router.post('/create_vote', VoteController.create)
-// vote crud end
+// vote end
 
+// follow start
+router.post('/create_follow', FollowController.create)
+// follow end
 
 // blog crud start
 router.post('/blog_create', BlogController.create)

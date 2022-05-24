@@ -318,11 +318,39 @@ const no_answered_ques = (req, res) => {
 }
 
 
+const category_wise_all_ques = (req,res) => {
+    // let dataSet = {
+    //     title: req.body.title,
+    //     userId: req.body.userId,
+    //     category: req.body.category,
+    //     tag: req.body.tag,
+    //     description: req.body.description,
+    //     createOn: new Date()
+    // }
+    // const dataModel = new Question(dataSet);
+    // dataModel.save()
+    //     .then((result) => {
+    //         return res.send({
+    //             status: true,
+    //             data: result,
+    //             error: null
+    //         })
+    //     }).catch((err) => {
+    //         return res.send({
+    //             status: false,
+    //             data: null,
+    //             error: err
+    //         })
+    //     });
+}
+
+
 module.exports = {
     create,
     viewall,
     update_data,
     delete_data,
     single_ques_fetch,
-    no_answered_ques
+    no_answered_ques,
+    category_wise_all_ques
 }

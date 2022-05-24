@@ -18,6 +18,10 @@ const UserSchema = new mongoose.Schema({
         type : String,
         default : "https://templates.envytheme.com/pify/default/assets/images/user/user-15.jpg"
     },
+    bio : {
+        type : String,
+        required : true
+    },
     status : {
         type : Boolean,
         default : true
