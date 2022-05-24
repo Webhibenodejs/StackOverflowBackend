@@ -318,30 +318,89 @@ const no_answered_ques = (req, res) => {
 }
 
 
-const category_wise_all_ques = (req,res) => {
-    // let dataSet = {
-    //     title: req.body.title,
-    //     userId: req.body.userId,
-    //     category: req.body.category,
-    //     tag: req.body.tag,
-    //     description: req.body.description,
-    //     createOn: new Date()
-    // }
-    // const dataModel = new Question(dataSet);
-    // dataModel.save()
-    //     .then((result) => {
-    //         return res.send({
-    //             status: true,
-    //             data: result,
-    //             error: null
-    //         })
-    //     }).catch((err) => {
-    //         return res.send({
-    //             status: false,
-    //             data: null,
-    //             error: err
-    //         })
-    //     });
+const category_wise_all_ques = (req, res) => {
+    return Question.aggregate([
+        {
+            $match: { isDeleted: false, status: true, category: mongoose.Types.ObjectId(req.params.id) }
+        },
+        {
+            $lookup: {
+                from: "categories",
+                localField: "category",
+                foreignField: "_id",
+                pipeline: [
+                    {
+                        $project: {
+                            __v: 0,
+                            isDeleted: 0,
+                            _id: 0,
+                            status: 0,
+                            createOn: 0
+                        },
+                    }
+                ],
+                as: "categoryDetails"
+            }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "userId",
+                foreignField: "_id",
+                pipeline: [
+                    {
+                        $project: {
+                            __v: 0,
+                            _id: 0,
+                            email: 0,
+                            password: 0,
+                            status: 0,
+                            isDeleted: 0,
+                            createOn: 0
+                        },
+                    }
+                ],
+                as: "userDetails"
+            }
+        },
+        {
+            $sort: {
+                _id: -1
+            }
+        },
+        {
+            $project: {
+                __v: 0,
+                status: 0,
+                isDeleted: 0
+            }
+        },
+        { $unwind: "$userDetails" },
+        { $unwind: "$categoryDetails" }
+
+    ])
+        .then((data) => {
+            if (data.length == 0) {
+                return res.status(200).json({
+                    status: false,
+                    data: null,
+                    error: "No Questions Found in this category !!!"
+                });
+            } else {
+                return res.status(200).json({
+                    status: true,
+                    data: data.length,
+                    error: null
+                });
+            }
+        })
+        .catch((error) => {
+            return res.status(200).json({
+                status: false,
+                data: null,
+                error: "Something Went Wrong !!!",
+            });
+        });
 }
 
 

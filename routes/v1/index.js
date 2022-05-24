@@ -11,6 +11,7 @@ const TagController = require('../../Controller/TagController')
 const VoteController = require('../../Controller/VoteController')
 const BlogController = require('../../Controller/BlogController')
 const FollowController = require('../../Controller/FollowController')
+const FooterController = require('../../Controller/FooterController')
 
 
 
@@ -34,7 +35,7 @@ router.put('/update_question/:id',QuestionController.update_data)
 router.delete('/delete_question/:id',QuestionController.delete_data)
 router.get('/single-question-fetch/:id',QuestionController.single_ques_fetch)
 router.get('/unanswered-question',QuestionController.no_answered_ques)
-router.get('/category-wise-all-question',QuestionController.no_answered_ques)
+router.get('/category-wise-all-question/:id',QuestionController.category_wise_all_ques)
 // questions crud end
 
 // answers crud start
@@ -82,6 +83,10 @@ router.get('/blog_view_all', BlogController.viewall)
 router.put('/blog_update/:id', BlogController.update_data)
 router.put('/blog_delete/:id', BlogController.delete_data)
 // blog crud end
+
+// contact_us start
+router.post('/send-contacts', FooterController.send_mails)
+// contact_us end
 
 
 module.exports = router;
