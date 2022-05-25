@@ -7,8 +7,8 @@ const AnswerSchema = new mongoose.Schema({
     },
     userId: {
         type:  mongoose.Schema.Types.ObjectId,
-        // required: true,
-        default : "62874a3c7c343db81a53ec2e"
+        required: true,
+        // default : "62874a3c7c343db81a53ec2e"
     },
     userTypeGuest: {
         type: Boolean,

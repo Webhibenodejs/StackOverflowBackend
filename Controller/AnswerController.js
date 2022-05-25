@@ -6,9 +6,10 @@ const User = require("../Model/User");
 
 
 const create = (req, res) => {
+
     let dataSet = {
         questionId: req.body.questionId,
-        userId: mongoose.Types.ObjectId('62874a427c343db81a53ec30'),
+        userId: req.body.userId || mongoose.Types.ObjectId('62874a427c343db81a53ec31'),
         userTypeGuest: req.body.userTypeGuest,
         name: req.body.name || "user_name",
         email: req.body.email || "guest_email",

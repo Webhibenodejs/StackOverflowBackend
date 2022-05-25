@@ -262,12 +262,29 @@ const single_ques_fetch = (req, res) => {
                             questionId: 0,
                         },
                     },
-                    
+                    {
+                        $lookup: {
+                            from: "users",
+                            localField: "userId",
+                            foreignField: "_id",
+                            pipeline: [
+                                {
+                                    $project: {
+                                        __v: 0,
+                                        isDeleted: 0,
+                                        email:0,
+                                        password:0,
+                                        status:0,
+                                        createOn:0
+                                    }
+                                }
+                            ],
+                            as: "answersUserDetails"
+                        }
+                    }
                 ],
-                
                 as: "answers"
             }
-            
         },
         { $unwind: "$questionUserDetails" },
         { $unwind: "$categoryDetails" },
@@ -279,11 +296,6 @@ const single_ques_fetch = (req, res) => {
                 tag: 0,
                 category: 0,
                 userId: 0,
-                // 'answers.userId':
-                // {
-                //     $cond: { if: { $eq: [ '$answers.userTypeGuest', true ] }, then: 0 }
-                // }
-                //  0
             },
         },
     ])
@@ -411,6 +423,24 @@ const category_wise_all_ques = (req, res) => {
             }
         },
         {
+            $lookup: {
+                from: "tags",
+                localField: "tag.tagId",
+                foreignField: "_id",
+                pipeline: [
+                    {
+                        $project: {
+                            __v: 0,
+                            status: 0,
+                            isDeleted: 0,
+                            createOn: 0
+                        },
+                    }
+                ],
+                as: "tagDetails"
+            }
+        },
+        {
             $sort: {
                 _id: -1
             }
@@ -418,6 +448,9 @@ const category_wise_all_ques = (req, res) => {
         {
             $project: {
                 __v: 0,
+                tag:0,
+                userId:0,
+                category:0,
                 status: 0,
                 isDeleted: 0
             }
