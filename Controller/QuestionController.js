@@ -76,6 +76,24 @@ const viewall = (req, res) => {
             }
         },
         {
+            $lookup: {
+                from: "tags",
+                localField: "tag.tagId",
+                foreignField: "_id",
+                pipeline: [
+                    {
+                        $project: {
+                            __v: 0,
+                            status: 0,
+                            isDeleted: 0,
+                            createOn: 0
+                        },
+                    }
+                ],
+                as: "tagDetails"
+            }
+        },
+        {
             $sort: {
                 _id: -1
             }
@@ -84,11 +102,13 @@ const viewall = (req, res) => {
             $project: {
                 __v: 0,
                 status: 0,
-                isDeleted: 0
+                isDeleted: 0,
+                tag: 0
             }
         },
         { $unwind: "$userDetails" },
         { $unwind: "$categoryDetails" }
+        // { $unwind: "$tagDetails" }
 
     ])
         .then((data) => {
@@ -173,13 +193,6 @@ const single_ques_fetch = (req, res) => {
             $match: { "_id": mongoose.Types.ObjectId(req.params.id), "status": true, "isDeleted": false }
         },
         {
-            $project: {
-                __v: 0,
-                status: 0,
-                isDeleted: 0
-            },
-        },
-        {
             $lookup: {
                 from: "categories",
                 localField: "category",
@@ -189,7 +202,6 @@ const single_ques_fetch = (req, res) => {
                         $project: {
                             __v: 0,
                             isDeleted: 0,
-                            _id: 0,
                             status: 0,
                             createOn: 0
                         },
@@ -207,7 +219,6 @@ const single_ques_fetch = (req, res) => {
                     {
                         $project: {
                             __v: 0,
-                            _id: 0,
                             email: 0,
                             password: 0,
                             status: 0,
@@ -216,7 +227,25 @@ const single_ques_fetch = (req, res) => {
                         },
                     }
                 ],
-                as: "userDetails"
+                as: "questionUserDetails"
+            }
+        },
+        {
+            $lookup: {
+                from: "tags",
+                localField: "tag.tagId",
+                foreignField: "_id",
+                pipeline: [
+                    {
+                        $project: {
+                            __v: 0,
+                            status: 0,
+                            isDeleted: 0,
+                            createOn: 0
+                        },
+                    }
+                ],
+                as: "tagDetails"
             }
         },
         {
@@ -230,15 +259,33 @@ const single_ques_fetch = (req, res) => {
                         $project: {
                             __v: 0,
                             isDeleted: 0,
-                            questionId: 0
+                            questionId: 0,
                         },
-                    }
+                    },
+                    
                 ],
+                
                 as: "answers"
             }
+            
         },
-        { $unwind: "$userDetails" },
-        { $unwind: "$categoryDetails" }
+        { $unwind: "$questionUserDetails" },
+        { $unwind: "$categoryDetails" },
+        {
+            $project: {
+                __v: 0,
+                status: 0,
+                isDeleted: 0,
+                tag: 0,
+                category: 0,
+                userId: 0,
+                // 'answers.userId':
+                // {
+                //     $cond: { if: { $eq: [ '$answers.userTypeGuest', true ] }, then: 0 }
+                // }
+                //  0
+            },
+        },
     ])
         .then((data) => {
             if (data.length == 0) {
@@ -389,7 +436,7 @@ const category_wise_all_ques = (req, res) => {
             } else {
                 return res.status(200).json({
                     status: true,
-                    data: data.length,
+                    data: data,
                     error: null
                 });
             }
