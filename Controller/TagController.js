@@ -5,6 +5,7 @@ var mongoose = require('mongoose');
 const create = (req, res) => {
     let dataSet = {
         tag: req.body.tag,
+        description : req.body.description,
         createOn: new Date()
     }
     const dataModel = new Tag(dataSet);

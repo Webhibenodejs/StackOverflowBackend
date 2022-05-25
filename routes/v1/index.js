@@ -73,15 +73,24 @@ router.put('/tag_delete/:id', TagController.delete_data)
 router.post('/create_vote', VoteController.create)
 // vote end
 
-// follow start
+// user follow start
 router.post('/create_follow', FollowController.create)
-// follow end
+router.post('/check-follwing', FollowController.checkFollowing)
+router.delete('/unfollow', FollowController.unfollow)
+// user follow end
+
+// tag follow start
+router.post('/create-tag-follow', FollowController.tagFollowCreate)
+router.post('/check-tag-follwing', FollowController.checkTagFollowing)
+router.delete('/tag-unfollow', FollowController.unfollowTag)
+// tag follow end
 
 // blog crud start
 router.post('/blog_create', BlogController.create)
 router.get('/blog_view_all', BlogController.viewall)
 router.put('/blog_update/:id', BlogController.update_data)
 router.put('/blog_delete/:id', BlogController.delete_data)
+router.get('/blog_single_view/:id', BlogController.viewsingle)
 // blog crud end
 
 // contact_us start
