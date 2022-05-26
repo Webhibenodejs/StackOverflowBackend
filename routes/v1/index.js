@@ -35,7 +35,10 @@ router.put('/update_question/:id',QuestionController.update_data)
 router.delete('/delete_question/:id',QuestionController.delete_data)
 router.get('/single-question-fetch/:id',QuestionController.single_ques_fetch)
 router.get('/unanswered-question',QuestionController.no_answered_ques)
+router.get('/most-answered-question',QuestionController.most_answered_ques)
 router.get('/category-wise-all-question/:id',QuestionController.category_wise_all_ques)
+router.get('/categorywise-no-answered-question/:id',QuestionController.category_wise_no_answered_ques)
+router.get('/categorywise-most-answered-question/:id',QuestionController.category_wise_most_answered_ques)
 // questions crud end
 
 // answers crud start

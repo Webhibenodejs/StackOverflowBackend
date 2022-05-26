@@ -1,5 +1,6 @@
 const Category = require("../Model/Category");
 var mongoose = require('mongoose');
+const { exists } = require("../Model/Category");
 
 
 const create = (req, res) => {
@@ -7,33 +8,58 @@ const create = (req, res) => {
         name: req.body.cat_name,
         createOn: new Date()
     }
-    const dataModel = new Category(dataSet);
-    dataModel.save()
-        .then((result) => {
-            return res.send({
-                status: true,
-                data: result,
-                error: null
-            })
-        }).catch((err) => {
-            return res.send({
+
+    return Category.findOne({ name: req.body.cat_name }, async (error, category_exists) => {
+        if (error) {
+            res.status(200).json({
                 status: false,
                 data: null,
-                error: err
-            })
-        });
+                error: 'Something Went Wrong !!!!'
+            });
+        } else if (category_exists != null) {
+            if ((category_exists.isDeleted == false) || (category_exists.status == true)) {
+                res.status(200).json({
+                    status: false,
+                    data: null,
+                    error: 'This Category is either Deactivated or Deleted !!!!'
+                });
+            } else {
+                res.status(200).json({
+                    status: false,
+                    data: null,
+                    error: 'This Category Exists!!!!'
+                });
+            }
+        } else {
+            const dataModel = new Category(dataSet);
+            dataModel.save()
+                .then((result) => {
+                    return res.send({
+                        status: true,
+                        data: result,
+                        error: null
+                    })
+                }).catch((err) => {
+                    return res.send({
+                        status: false,
+                        data: null,
+                        error: err
+                    })
+                });
+        }
+    });
 }
 
 const viewall = (req, res) => {
     return Category.aggregate([
         {
-            $match : { isDeleted : false, status : true }
+            $match: { isDeleted: false, status: true }
         },
         {
             $project: {
                 __v: 0,
-                status : 0,
-                isDeleted : 0
+                status: 0,
+                isDeleted: 0
             },
         },
         {
@@ -46,35 +72,65 @@ const viewall = (req, res) => {
             return res.status(200).json({
                 status: true,
                 data: data,
-                error : null
+                error: null
             });
         })
         .catch((error) => {
             return res.status(200).json({
                 status: false,
-                data : null,
+                data: null,
                 error: "Something Went Wrong !!!",
             });
         });
 }
 
 const update_data = (req, res) => {
-    return Category.findOneAndUpdate(
-        { "_id": mongoose.Types.ObjectId(req.params.id) },
-        { $set: req.body }
-    ).then((result) => {
-        return res.send({
-            status: true,
-            data: { ...result._doc, ...req.body },
-            error: null
-        })
-    }).catch((err) => {
-        return res.send({
-            status: false,
-            data: null,
-            error: "Update Failed !!!!"
-        })
+    return Category.findOne({ name: req.body.cat_name }, async (error, category_exists) => {
+        // console.log('>>>>>>>>>>>>>>>>>>>>>>>>',category_exists);
+        // return  false;
+        if (error) {
+            res.status(200).json({
+                status: false,
+                data: null,
+                error: 'Something Went Wrong !!!!'
+            });
+        } else if (category_exists != null) {
+            if ((category_exists._id != mongoose.Types.ObjectId(req.params.id)) && (category_exists.name == req.body.cat_name)) {
+                return res.send({
+                    status: false,
+                    data: null,
+                    error: "This Category Exists!!!! Try New !!"
+                })
+            } 
+        } else {
+            return Category.findOneAndUpdate(
+                { "_id": mongoose.Types.ObjectId(req.params.id) },
+                { $set: req.body }
+            ).then((result) => {
+                return res.send({
+                    status: true,
+                    data: { ...result._doc, ...req.body },
+                    error: null
+                })
+            }).catch((err) => {
+                return res.send({
+                    status: false,
+                    data: null,
+                    error: "Update Failed !!!!"
+                })
+            });
+        }
     });
+
+
+
+
+
+
+
+
+
+
 }
 
 const delete_data = (req, res) => {
@@ -94,15 +150,15 @@ const delete_data = (req, res) => {
     //         });
     //     });
 
- 
+
     return Category.findOneAndUpdate(
         { "_id": mongoose.Types.ObjectId(req.params.id) },
         // { $set: req.body }
-        { isDeleted : true }
+        { isDeleted: true }
     ).then((result) => {
         return res.send({
             status: true,
-            data: { ...result._doc, ...{isDeleted : true} },
+            data: { ...result._doc, ...{ isDeleted: true } },
             error: null
         })
     }).catch((err) => {

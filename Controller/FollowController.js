@@ -80,20 +80,20 @@ const unfollow = (req, res) => {
 
         if (data.deletedCount == 0) {
             return res.status(200).json({
-                success: false,
+                status: false,
                 data: null,
                 error: "Already Unfollowed !!! ",
             });
         } else {
             return res.status(200).json({
-                success: true,
+                status: true,
                 data: "Succesfully Unfollowed !!!",
                 error: null
             });
         }
     }).catch((error) => {
         res.status(500).json({
-            success: false,
+            status: false,
             data: null,
             error: "Delete Failed !!!"
         });
@@ -162,7 +162,7 @@ const checkTagFollowing = (req, res) => {
             });
         } else {
             res.status(200).json({
-                status: true,
+                status: false,
                 data: 'Not Yet Follwed !!!!',
                 error: null
             });
@@ -176,20 +176,20 @@ const unfollowTag = (req, res) => {
     }).then((data) => {
         if (data.deletedCount == 0) {
             return res.status(200).json({
-                success: false,
+                status: false,
                 data: null,
                 error: "Already Unfollowed !!! ",
             });
         } else {
             return res.status(200).json({
-                success: true,
+                status: true,
                 data: "Succesfully Unfollowed !!!",
                 error: null
             });
         }
     }).catch((error) => {
         res.status(500).json({
-            success: false,
+            status: false,
             data: null,
             error: "Delete Failed !!!"
         });
