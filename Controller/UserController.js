@@ -1,6 +1,6 @@
 const User = require("../Model/User");
 var mongoose = require('mongoose');
-const { use } = require("express/lib/router");
+// const { use } = require("express/lib/router");
 
 
 
@@ -38,6 +38,14 @@ const single_use_fetch = (req, res) => {
     return User.aggregate([
         {
             $match: { "_id": mongoose.Types.ObjectId(req.params.id), "isDeleted": false },
+        },
+        {
+            $lookup: {
+                from: "answers",
+                localField: "_id",
+                foreignField: "questionId",
+                as : ""
+            }
         },
         {
             $project: {
@@ -140,5 +148,4 @@ module.exports = {
     single_use_fetch,
     update_data,
     update_password
-    // delete_data
 }

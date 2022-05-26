@@ -941,6 +941,116 @@ const category_wise_most_answered_ques = (req, res) => {
 
 }
 
+
+const tag_wise_all_ques = (req, res) => {
+    
+    return Question.aggregate([
+        {
+            $match: { isDeleted: false, status: true, 'tag.tagId' : mongoose.Types.ObjectId(req.params.id) }
+        },
+        {
+            $lookup: {
+                from: "categories",
+                localField: "category",
+                foreignField: "_id",
+                pipeline: [
+                    {
+                        $project: {
+                            __v: 0,
+                            isDeleted: 0,
+                            status: 0,
+                            createOn: 0
+                        },
+                    }
+                ],
+                as: "categoryDetails"
+            }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "userId",
+                foreignField: "_id",
+                pipeline: [
+                    {
+                        $project: {
+                            __v: 0,
+                            email: 0,
+                            password: 0,
+                            status: 0,
+                            isDeleted: 0,
+                            createOn: 0
+                        },
+                    }
+                ],
+                as: "userDetails"
+            }
+        },
+        {
+            $lookup: {
+                from: "tags",
+                localField: "tag.tagId",
+                foreignField: "_id",
+                pipeline: [
+                    {
+                        $project: {
+                            __v: 0,
+                            status: 0,
+                            isDeleted: 0,
+                            createOn: 0
+                        },
+                    }
+                ],
+                as: "tagDetails"
+            }
+        },
+        {
+            $sort: {
+                _id: -1
+            }
+        },
+        {
+            $project: {
+                __v: 0,
+                tag: 0,
+                userId: 0,
+                category: 0,
+                status: 0,
+                isDeleted: 0
+            }
+        },
+        { $unwind: "$userDetails" },
+        { $unwind: "$categoryDetails" }
+    ]).then((data) => {
+            if (data.length == 0) {
+                return res.status(200).json({
+                    status: false,
+                    data: null,
+                    error: "No Questions Found in this Tag !!!"
+                });
+            } else {
+                return res.status(200).json({
+                    status: true,
+                    data: data,
+                    error: null
+                });
+            }
+        })
+        .catch((error) => {
+            return res.status(200).json({
+                status: false,
+                data: null,
+                error: "Something Went Wrong !!!",
+            });
+        });
+
+}
+
+
+const tag_wise_most_answered_ques = async (req, res) => {
+    
+} 
+
 module.exports = {
     create,
     viewall,
@@ -951,5 +1061,8 @@ module.exports = {
     most_answered_ques,
     category_wise_all_ques,
     category_wise_no_answered_ques,
-    category_wise_most_answered_ques
+    category_wise_most_answered_ques,
+    tag_wise_all_ques,
+    tag_wise_most_answered_ques
+
 }

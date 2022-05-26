@@ -12,7 +12,7 @@ const VoteController = require('../../Controller/VoteController')
 const BlogController = require('../../Controller/BlogController')
 const FollowController = require('../../Controller/FollowController')
 const FooterController = require('../../Controller/FooterController')
-
+const CommonController = require('../../Controller/CommonController')
 
 
 /* GET home page. */
@@ -39,6 +39,7 @@ router.get('/most-answered-question',QuestionController.most_answered_ques)
 router.get('/category-wise-all-question/:id',QuestionController.category_wise_all_ques)
 router.get('/categorywise-no-answered-question/:id',QuestionController.category_wise_no_answered_ques)
 router.get('/categorywise-most-answered-question/:id',QuestionController.category_wise_most_answered_ques)
+router.get('/tagwise-all-question/:id',QuestionController.tag_wise_all_ques)
 // questions crud end
 
 // answers crud start
@@ -99,6 +100,14 @@ router.get('/blog_single_view/:id', BlogController.viewsingle)
 // contact_us start
 router.post('/send-contacts', FooterController.send_mails)
 // contact_us end
+
+//common things start
+router.get('/total-questions', CommonController.total_questions)
+router.get('/total-answers', CommonController.total_answers)
+router.get('/total-users', CommonController.total_users)
+router.get('/total-blogs', CommonController.total_blogs)
+router.post('/search-data', CommonController.search_data)
+//common things end
 
 
 module.exports = router;
