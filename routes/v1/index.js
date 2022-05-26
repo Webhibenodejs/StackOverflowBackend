@@ -80,13 +80,13 @@ router.post('/create_vote', VoteController.create)
 // user follow start
 router.post('/create_follow', FollowController.create)
 router.post('/check-follwing', FollowController.checkFollowing)
-router.delete('/unfollow', FollowController.unfollow)
+router.post('/unfollow', FollowController.unfollow)
 // user follow end
 
 // tag follow start
 router.post('/create-tag-follow', FollowController.tagFollowCreate)
 router.post('/check-tag-follwing', FollowController.checkTagFollowing)
-router.delete('/tag-unfollow', FollowController.unfollowTag)
+router.post('/tag-unfollow', FollowController.unfollowTag)
 // tag follow end
 
 // blog crud start
