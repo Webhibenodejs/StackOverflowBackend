@@ -40,6 +40,11 @@ router.get('/category-wise-all-question/:id',QuestionController.category_wise_al
 router.get('/categorywise-no-answered-question/:id',QuestionController.category_wise_no_answered_ques)
 router.get('/categorywise-most-answered-question/:id',QuestionController.category_wise_most_answered_ques)
 router.get('/tagwise-all-question/:id',QuestionController.tag_wise_all_ques)
+router.get('/tagwise-unanswered-question/:id',QuestionController.tag_wise_unanswered_ques)
+router.get('/tagwise-most-answered-question/:id',QuestionController.tag_wise_most_answered_ques)
+router.post('/search-questions', QuestionController.search_data)
+router.post('/search-unanswered-questions', QuestionController.search_unanswered_question)
+router.post('/search-most-answered-questions', QuestionController.search_most_answered_questions)
 // questions crud end
 
 // answers crud start
@@ -106,7 +111,7 @@ router.get('/total-questions', CommonController.total_questions)
 router.get('/total-answers', CommonController.total_answers)
 router.get('/total-users', CommonController.total_users)
 router.get('/total-blogs', CommonController.total_blogs)
-router.post('/search-data', CommonController.search_data)
+
 //common things end
 
 

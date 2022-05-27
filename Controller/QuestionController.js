@@ -92,27 +92,58 @@ const viewall = (req, res) => {
                 as: "tagDetails"
             }
         },
-        // {
-        //     $lookup: {
-        //         from: "answers",
-        //         localField: "_id",
-        //         foreignField: "questionId",
-        //         pipeline: [
-        //             { $match: { "isDeleted": false } },
-        //             {
-        //                 $project: {
-        //                     __v: 0,
-        //                     isDeleted: 0,
-        //                     questionId: 0
-        //                 },
-        //             },
-        //             {
-        //                 $count: "total_answer_count"
-        //             }
-        //         ],
-        //         as: "answers",
-        //     }
-        // },
+        {
+            $lookup: {
+                from: "answers",
+                localField: "_id",
+                foreignField: "questionId",
+                pipeline: [
+                    { $match: { "isDeleted": false } },
+                    {
+                        $project: {
+                            __v: 0,
+                            isDeleted: 0,
+                            questionId: 0
+                        },
+                    }
+                ],
+                as: "answers"
+            }
+        },
+        {
+            $addFields: { answerCount: { $size: "$answers" } }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "like" } },
+                ],
+                as: "likes"
+            }
+        },
+        {
+            $addFields: { likeCount: { $size: "$likes" } }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "dislike" } },
+                ],
+                as: "dislikes"
+            }
+        },
+        {
+            $addFields: { dislikeCount: { $size: "$dislikes" } }
+        },
+        {
+            $addFields: { totalVoteCount: { $add: ["$likeCount", "$dislikeCount"] } }
+        },
         {
             $sort: {
                 _id: -1
@@ -124,19 +155,29 @@ const viewall = (req, res) => {
                 status: 0,
                 isDeleted: 0,
                 tag: 0,
-                category:0,
-                userId:0
+                category: 0,
+                userId: 0,
+                answers: 0,
+                likes: 0,
+                dislikes: 0
             }
         },
         { $unwind: "$userDetails" },
         { $unwind: "$categoryDetails" },
-        // { $unwind: "$answers" },
     ]).then((data) => {
-        return res.status(200).json({
-            status: true,
-            data: data,
-            error: null
-        });
+        if (data.length == 0) {
+            return res.status(200).json({
+                status: false,
+                data: null,
+                error: "No Questions Found !!!"
+            });
+        } else {
+            return res.status(200).json({
+                status: true,
+                data: data,
+                error: null
+            });
+        }
     }).catch((error) => {
         return res.status(200).json({
             status: false,
@@ -300,10 +341,81 @@ const single_ques_fetch = (req, res) => {
                             ],
                             as: "answersUserDetails"
                         }
+                    },
+                    {
+                        $lookup: {
+                            from: "votes",
+                            localField: "_id",
+                            foreignField: "ques_ans_id",
+                            pipeline: [
+                                { $match: { "ques_ans_type": "answer", isDeleted: false, status: true, like_dislike_type: "like" } },
+                            ],
+                            as: "answer_likes"
+                        }
+                    },
+                    {
+                        $addFields: { answerLikeCount: { $size: "$answer_likes" } }
+                    },
+                    {
+                        $lookup: {
+                            from: "votes",
+                            localField: "_id",
+                            foreignField: "ques_ans_id",
+                            pipeline: [
+                                { $match: { "ques_ans_type": "answer", isDeleted: false, status: true, like_dislike_type: "dislike" } },
+                            ],
+                            as: "answer_dislikes"
+                        }
+                    },
+                    {
+                        $addFields: { answerDislikeCount: { $size: "$answer_dislikes" } }
+                    },
+                    {
+                        $addFields: { totalAnswerVoteCount: { $add: ["$answerLikeCount", "$answerDislikeCount"] } }
+                    },
+                    {
+                        $project:{
+                            answer_likes:0,
+                            answer_dislikes:0
+                        }
                     }
                 ],
                 as: "answers"
             }
+        },
+        {
+            $addFields: { answerCount: { $size: "$answers" } }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "like" } },
+                ],
+                as: "likes"
+            }
+        },
+        {
+            $addFields: { likeCount: { $size: "$likes" } }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "dislike" } },
+                ],
+                as: "dislikes"
+            }
+        },
+        {
+            $addFields: { dislikeCount: { $size: "$dislikes" } }
+        },
+        {
+            $addFields: { totalVoteCount: { $add: ["$likeCount", "$dislikeCount"] } }
         },
         { $unwind: "$questionUserDetails" },
         { $unwind: "$categoryDetails" },
@@ -315,31 +427,31 @@ const single_ques_fetch = (req, res) => {
                 tag: 0,
                 category: 0,
                 userId: 0,
+                likes: 0,
+                dislikes: 0
             },
         },
-    ])
-        .then((data) => {
-            if (data.length == 0) {
-                return res.status(200).json({
-                    status: false,
-                    data: null,
-                    error: "No Questions Found !!!"
-                });
-            } else {
-                return res.status(200).json({
-                    status: true,
-                    data: data[0],
-                    error: null
-                });
-            }
-        })
-        .catch((error) => {
+    ]).then((data) => {
+        if (data.length == 0) {
             return res.status(200).json({
                 status: false,
                 data: null,
-                error: "Something Went Wrong !!",
+                error: "No Questions Found !!!"
             });
+        } else {
+            return res.status(200).json({
+                status: true,
+                data: data[0],
+                error: null
+            });
+        }
+    }).catch((error) => {
+        return res.status(200).json({
+            status: false,
+            data: null,
+            error: "Something Went Wrong !!",
         });
+    });
 }
 
 const no_answered_ques = (req, res) => {
@@ -417,17 +529,47 @@ const no_answered_ques = (req, res) => {
                             isDeleted: 0,
                             questionId: 0
                         },
-                    },
-                    {
-                        $count: "total_answer_count"
                     }
                 ],
                 as: "answers",
             }
         },
-        { $unwind: "$answers" },
         {
-            $match: { 'answers.total_answer_count': 0 }
+            $addFields: { answerCount: { $size: "$answers" } }
+        },
+        {
+            $match: { "answerCount": 0 }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "like" } },
+                ],
+                as: "likes"
+            }
+        },
+        {
+            $addFields: { likeCount: { $size: "$likes" } }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "dislike" } },
+                ],
+                as: "dislikes"
+            }
+        },
+        {
+            $addFields: { dislikeCount: { $size: "$dislikes" } }
+        },
+        {
+            $addFields: { totalVoteCount: { $add: ["$likeCount", "$dislikeCount"] } }
         },
         {
             $project: {
@@ -436,8 +578,16 @@ const no_answered_ques = (req, res) => {
                 isDeleted: 0,
                 category: 0,
                 userId: 0,
-                tag: 0
+                tag: 0,
+                answers: 0,
+                likes: 0,
+                dislikes: 0
             },
+        },
+        {
+            $sort: {
+                _id: -1
+            }
         },
         { $unwind: "$categoryDetails" },
         { $unwind: "$userDetails" }
@@ -541,18 +691,48 @@ const most_answered_ques = (req, res) => {
                             isDeleted: 0,
                             questionId: 0
                         },
-                    },
-                    {
-                        $count: "total_answer_count"
                     }
                 ],
                 as: "answers",
             }
         },
-        { $unwind: "$answers" },
+        {
+            $addFields: { answerCount: { $size: "$answers" } }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "like" } },
+                ],
+                as: "likes"
+            }
+        },
+        {
+            $addFields: { likeCount: { $size: "$likes" } }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "dislike" } },
+                ],
+                as: "dislikes"
+            }
+        },
+        {
+            $addFields: { dislikeCount: { $size: "$dislikes" } }
+        },
+        {
+            $addFields: { totalVoteCount: { $add: ["$likeCount", "$dislikeCount"] } }
+        },
         {
             $sort: {
-                'answers.total_answer_count': -1
+                "answerCount": -1
             }
         },
         {
@@ -562,32 +742,42 @@ const most_answered_ques = (req, res) => {
                 isDeleted: 0,
                 category: 0,
                 userId: 0,
-                tag: 0
+                tag: 0,
+                answers: 0,
+                likes: 0,
+                dislikes: 0
             },
         },
         { $unwind: "$categoryDetails" },
         { $unwind: "$userDetails" }
     ]).then((data) => {
-        return res.status(200).json({
-            status: true,
-            data: data,
-            error: null,
-
-        });
-    })
-        .catch((error) => {
+        if (data.length == 0) {
             return res.status(200).json({
                 status: false,
                 data: null,
-                error: "Something Went Wrong !!!",
-                error_code: error
+                error: "No Questions Found !!!"
             });
+        } else {
+            return res.status(200).json({
+                status: true,
+                data: data,
+                error: null
+            });
+        }
+    }).catch((error) => {
+        return res.status(200).json({
+            status: false,
+            data: null,
+            error: "Something Went Wrong !!!",
+            error_code: error
         });
+    });
 
 }
 
 
 const category_wise_all_ques = (req, res) => {
+
     return Question.aggregate([
         {
             $match: { isDeleted: false, status: true, category: mongoose.Types.ObjectId(req.params.id) }
@@ -602,7 +792,6 @@ const category_wise_all_ques = (req, res) => {
                         $project: {
                             __v: 0,
                             isDeleted: 0,
-                            // _id: 0,
                             status: 0,
                             createOn: 0
                         },
@@ -620,7 +809,6 @@ const category_wise_all_ques = (req, res) => {
                     {
                         $project: {
                             __v: 0,
-                            // _id: 0,
                             email: 0,
                             password: 0,
                             status: 0,
@@ -651,6 +839,58 @@ const category_wise_all_ques = (req, res) => {
             }
         },
         {
+            $lookup: {
+                from: "answers",
+                localField: "_id",
+                foreignField: "questionId",
+                pipeline: [
+                    { $match: { "isDeleted": false } },
+                    {
+                        $project: {
+                            __v: 0,
+                            isDeleted: 0,
+                            questionId: 0
+                        },
+                    }
+                ],
+                as: "answers"
+            }
+        },
+        {
+            $addFields: { answerCount: { $size: "$answers" } }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "like" } },
+                ],
+                as: "likes"
+            }
+        },
+        {
+            $addFields: { likeCount: { $size: "$likes" } }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "dislike" } },
+                ],
+                as: "dislikes"
+            }
+        },
+        {
+            $addFields: { dislikeCount: { $size: "$dislikes" } }
+        },
+        {
+            $addFields: { totalVoteCount: { $add: ["$likeCount", "$dislikeCount"] } }
+        },
+        {
             $sort: {
                 _id: -1
             }
@@ -658,39 +898,40 @@ const category_wise_all_ques = (req, res) => {
         {
             $project: {
                 __v: 0,
-                tag: 0,
-                userId: 0,
-                category: 0,
                 status: 0,
-                isDeleted: 0
+                isDeleted: 0,
+                tag: 0,
+                category: 0,
+                userId: 0,
+                answers: 0,
+                likes: 0,
+                dislikes: 0
             }
         },
         { $unwind: "$userDetails" },
-        { $unwind: "$categoryDetails" }
-
-    ])
-        .then((data) => {
-            if (data.length == 0) {
-                return res.status(200).json({
-                    status: false,
-                    data: null,
-                    error: "No Questions Found in this category !!!"
-                });
-            } else {
-                return res.status(200).json({
-                    status: true,
-                    data: data,
-                    error: null
-                });
-            }
-        })
-        .catch((error) => {
+        { $unwind: "$categoryDetails" },
+    ]).then((data) => {
+        if (data.length == 0) {
             return res.status(200).json({
                 status: false,
                 data: null,
-                error: "Something Went Wrong !!!",
+                error: "No Questions Found !!!!"
             });
+        } else {
+            return res.status(200).json({
+                status: true,
+                data: data,
+                error: null
+            });
+        }
+    }).catch((error) => {
+        return res.status(200).json({
+            status: false,
+            data: null,
+            error: "Something Went Wrong !!!",
         });
+    });
+
 }
 
 
@@ -770,17 +1011,47 @@ const category_wise_no_answered_ques = (req, res) => {
                             isDeleted: 0,
                             questionId: 0
                         },
-                    },
-                    {
-                        $count: "total_answer_count"
                     }
                 ],
                 as: "answers",
             }
         },
-        { $unwind: "$answers" },
         {
-            $match: { 'answers.total_answer_count': 0 }
+            $addFields: { answerCount: { $size: "$answers" } }
+        },
+        {
+            $match: { "answerCount": 0 }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "like" } },
+                ],
+                as: "likes"
+            }
+        },
+        {
+            $addFields: { likeCount: { $size: "$likes" } }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "dislike" } },
+                ],
+                as: "dislikes"
+            }
+        },
+        {
+            $addFields: { dislikeCount: { $size: "$dislikes" } }
+        },
+        {
+            $addFields: { totalVoteCount: { $add: ["$likeCount", "$dislikeCount"] } }
         },
         {
             $project: {
@@ -789,8 +1060,16 @@ const category_wise_no_answered_ques = (req, res) => {
                 isDeleted: 0,
                 category: 0,
                 userId: 0,
-                tag: 0
+                tag: 0,
+                answers: 0,
+                likes: 0,
+                dislikes: 0
             },
+        },
+        {
+            $sort: {
+                _id: -1
+            }
         },
         { $unwind: "$categoryDetails" },
         { $unwind: "$userDetails" }
@@ -799,14 +1078,13 @@ const category_wise_no_answered_ques = (req, res) => {
             return res.status(200).json({
                 status: false,
                 data: null,
-                error: "No Questions Found !!!",
+                error: 'No Question Found !!!'
             });
         } else {
             return res.status(200).json({
                 status: true,
-                data: data.length,
-                error: null,
-
+                data: data,
+                error: null
             });
         }
     }).catch((error) => {
@@ -817,6 +1095,7 @@ const category_wise_no_answered_ques = (req, res) => {
             error_code: error
         });
     });
+
 }
 
 
@@ -896,18 +1175,48 @@ const category_wise_most_answered_ques = (req, res) => {
                             isDeleted: 0,
                             questionId: 0
                         },
-                    },
-                    {
-                        $count: "total_answer_count"
                     }
                 ],
                 as: "answers",
             }
         },
-        { $unwind: "$answers" },
+        {
+            $addFields: { answerCount: { $size: "$answers" } }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "like" } },
+                ],
+                as: "likes"
+            }
+        },
+        {
+            $addFields: { likeCount: { $size: "$likes" } }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "dislike" } },
+                ],
+                as: "dislikes"
+            }
+        },
+        {
+            $addFields: { dislikeCount: { $size: "$dislikes" } }
+        },
+        {
+            $addFields: { totalVoteCount: { $add: ["$likeCount", "$dislikeCount"] } }
+        },
         {
             $sort: {
-                'answers.total_answer_count': -1
+                "answerCount": -1
             }
         },
         {
@@ -917,36 +1226,47 @@ const category_wise_most_answered_ques = (req, res) => {
                 isDeleted: 0,
                 category: 0,
                 userId: 0,
-                tag: 0
-            },
+                tag: 0,
+                answers: 0,
+                likes: 0,
+                dislikes: 0
+            }
         },
         { $unwind: "$categoryDetails" },
         { $unwind: "$userDetails" }
     ]).then((data) => {
-        return res.status(200).json({
-            status: true,
-            data: data,
-            error: null,
-
-        });
-    })
-        .catch((error) => {
+        if (data.length == 0) {
             return res.status(200).json({
                 status: false,
                 data: null,
-                error: "Something Went Wrong !!!",
-                error_code: error
+                error: "No Questions Found !!!"
             });
+        } else {
+            return res.status(200).json({
+                status: true,
+                data: data,
+                error: null
+            });
+        }
+
+    }).catch((error) => {
+        return res.status(200).json({
+            status: false,
+            data: null,
+            error: "Something Went Wrong !!!",
+            error_code: error
         });
+    });
+
 
 }
 
 
 const tag_wise_all_ques = (req, res) => {
-    
+
     return Question.aggregate([
         {
-            $match: { isDeleted: false, status: true, 'tag.tagId' : mongoose.Types.ObjectId(req.params.id) }
+            $match: { isDeleted: false, status: true, 'tag.tagId': mongoose.Types.ObjectId(req.params.id) }
         },
         {
             $lookup: {
@@ -1005,6 +1325,58 @@ const tag_wise_all_ques = (req, res) => {
             }
         },
         {
+            $lookup: {
+                from: "answers",
+                localField: "_id",
+                foreignField: "questionId",
+                pipeline: [
+                    { $match: { "isDeleted": false } },
+                    {
+                        $project: {
+                            __v: 0,
+                            isDeleted: 0,
+                            questionId: 0
+                        },
+                    }
+                ],
+                as: "answers"
+            }
+        },
+        {
+            $addFields: { answerCount: { $size: "$answers" } }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "like" } },
+                ],
+                as: "likes"
+            }
+        },
+        {
+            $addFields: { likeCount: { $size: "$likes" } }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "dislike" } },
+                ],
+                as: "dislikes"
+            }
+        },
+        {
+            $addFields: { dislikeCount: { $size: "$dislikes" } }
+        },
+        {
+            $addFields: { totalVoteCount: { $add: ["$likeCount", "$dislikeCount"] } }
+        },
+        {
             $sort: {
                 _id: -1
             }
@@ -1012,44 +1384,859 @@ const tag_wise_all_ques = (req, res) => {
         {
             $project: {
                 __v: 0,
-                tag: 0,
-                userId: 0,
-                category: 0,
                 status: 0,
-                isDeleted: 0
+                isDeleted: 0,
+                tag: 0,
+                category: 0,
+                userId: 0,
+                answers: 0,
+                likes: 0,
+                dislikes: 0
             }
         },
         { $unwind: "$userDetails" },
-        { $unwind: "$categoryDetails" }
+        { $unwind: "$categoryDetails" },
     ]).then((data) => {
-            if (data.length == 0) {
-                return res.status(200).json({
-                    status: false,
-                    data: null,
-                    error: "No Questions Found in this Tag !!!"
-                });
-            } else {
-                return res.status(200).json({
-                    status: true,
-                    data: data,
-                    error: null
-                });
-            }
-        })
-        .catch((error) => {
+        if (data.length == 0) {
             return res.status(200).json({
                 status: false,
                 data: null,
-                error: "Something Went Wrong !!!",
+                error: "No Questions Found !!!"
             });
+        } else {
+            return res.status(200).json({
+                status: true,
+                data: data,
+                error: null
+            }); d
+        }
+
+    }).catch((error) => {
+        return res.status(200).json({
+            status: false,
+            data: null,
+            error: "Something Went Wrong !!!",
         });
+    });
+
 
 }
 
 
+const tag_wise_unanswered_ques = (req, res) => {
+
+    return Question.aggregate([
+        {
+            $match: { isDeleted: false, status: true, 'tag.tagId': mongoose.Types.ObjectId(req.params.id) }
+        },
+        {
+            $lookup: {
+                from: "categories",
+                localField: "category",
+                foreignField: "_id",
+                pipeline: [
+                    {
+                        $project: {
+                            __v: 0,
+                            isDeleted: 0,
+                            status: 0,
+                            createOn: 0
+                        },
+                    }
+                ],
+                as: "categoryDetails"
+            }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "userId",
+                foreignField: "_id",
+                pipeline: [
+                    {
+                        $project: {
+                            __v: 0,
+                            email: 0,
+                            password: 0,
+                            status: 0,
+                            isDeleted: 0,
+                            createOn: 0
+                        },
+                    }
+                ],
+                as: "userDetails"
+            }
+        },
+        {
+            $lookup: {
+                from: "tags",
+                localField: "tag.tagId",
+                foreignField: "_id",
+                pipeline: [
+                    {
+                        $project: {
+                            __v: 0,
+                            description: 0,
+                            status: 0,
+                            isDeleted: 0,
+                            createOn: 0
+                        },
+                    }
+                ],
+                as: "tagDetails"
+            }
+        },
+        {
+            $lookup: {
+                from: "answers",
+                localField: "_id",
+                foreignField: "questionId",
+                pipeline: [
+                    { $match: { "isDeleted": false } },
+                    {
+                        $project: {
+                            __v: 0,
+                            isDeleted: 0,
+                            questionId: 0
+                        },
+                    }
+                ],
+                as: "answers",
+            }
+        },
+        {
+            $addFields: { answerCount: { $size: "$answers" } }
+        },
+        {
+            $match: { "answerCount": 0 }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "like" } },
+                ],
+                as: "likes"
+            }
+        },
+        {
+            $addFields: { likeCount: { $size: "$likes" } }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "dislike" } },
+                ],
+                as: "dislikes"
+            }
+        },
+        {
+            $addFields: { dislikeCount: { $size: "$dislikes" } }
+        },
+        {
+            $addFields: { totalVoteCount: { $add: ["$likeCount", "$dislikeCount"] } }
+        },
+        {
+            $project: {
+                __v: 0,
+                status: 0,
+                isDeleted: 0,
+                category: 0,
+                userId: 0,
+                tag: 0,
+                answers: 0,
+                likes: 0,
+                dislikes: 0
+            },
+        },
+        {
+            $sort: {
+                _id: -1
+            }
+        },
+        { $unwind: "$categoryDetails" },
+        { $unwind: "$userDetails" }
+    ]).then((data) => {
+        if (data.length == 0) {
+            return res.status(200).json({
+                status: false,
+                data: null,
+                error: 'No Question Found !!!'
+            });
+        } else {
+            return res.status(200).json({
+                status: true,
+                data: data,
+                error: null
+            });
+        }
+    }).catch((error) => {
+        return res.status(200).json({
+            status: false,
+            data: null,
+            error: "Something Went Wrong !!!",
+            error_code: error
+        });
+    });
+}
+
+
 const tag_wise_most_answered_ques = async (req, res) => {
-    
-} 
+
+    return Question.aggregate([
+        {
+            $match: { isDeleted: false, status: true, 'tag.tagId': mongoose.Types.ObjectId(req.params.id) }
+        },
+        {
+            $lookup: {
+                from: "categories",
+                localField: "category",
+                foreignField: "_id",
+                pipeline: [
+                    {
+                        $project: {
+                            __v: 0,
+                            isDeleted: 0,
+                            status: 0,
+                            createOn: 0
+                        },
+                    }
+                ],
+                as: "categoryDetails"
+            }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "userId",
+                foreignField: "_id",
+                pipeline: [
+                    {
+                        $project: {
+                            __v: 0,
+                            email: 0,
+                            password: 0,
+                            status: 0,
+                            isDeleted: 0,
+                            createOn: 0
+                        },
+                    }
+                ],
+                as: "userDetails"
+            }
+        },
+        {
+            $lookup: {
+                from: "tags",
+                localField: "tag.tagId",
+                foreignField: "_id",
+                pipeline: [
+                    {
+                        $project: {
+                            __v: 0,
+                            description: 0,
+                            status: 0,
+                            isDeleted: 0,
+                            createOn: 0
+                        },
+                    }
+                ],
+                as: "tagDetails"
+            }
+        },
+        {
+            $lookup: {
+                from: "answers",
+                localField: "_id",
+                foreignField: "questionId",
+                pipeline: [
+                    { $match: { "isDeleted": false } },
+                    {
+                        $project: {
+                            __v: 0,
+                            isDeleted: 0,
+                            questionId: 0
+                        },
+                    }
+                ],
+                as: "answers",
+            }
+        },
+        {
+            $addFields: { answerCount: { $size: "$answers" } }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "like" } },
+                ],
+                as: "likes"
+            }
+        },
+        {
+            $addFields: { likeCount: { $size: "$likes" } }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "dislike" } },
+                ],
+                as: "dislikes"
+            }
+        },
+        {
+            $addFields: { dislikeCount: { $size: "$dislikes" } }
+        },
+        {
+            $addFields: { totalVoteCount: { $add: ["$likeCount", "$dislikeCount"] } }
+        },
+        {
+            $sort: {
+                "answerCount": -1
+            }
+        },
+        {
+            $project: {
+                __v: 0,
+                status: 0,
+                isDeleted: 0,
+                category: 0,
+                userId: 0,
+                tag: 0,
+                answers: 0,
+                likes: 0,
+                dislikes: 0
+            },
+        },
+        { $unwind: "$categoryDetails" },
+        { $unwind: "$userDetails" }
+    ]).then((data) => {
+        if (data.length == 0) {
+            return res.status(200).json({
+                status: false,
+                data: null,
+                error: "No Quesions Found !!!",
+
+            });
+        } else {
+            return res.status(200).json({
+                status: true,
+                data: data,
+                error: null,
+
+            });
+        }
+    }).catch((error) => {
+        return res.status(200).json({
+            status: false,
+            data: null,
+            error: "Something Went Wrong !!!",
+            error_code: error
+        });
+    });
+}
+
+
+const search_data = async (req, res) => {
+
+    return Question.aggregate([
+        {
+            $match: {
+                title: { $regex: req.body.searchBy, $options: "i" },
+                isDeleted: false,
+                status: true
+            }
+        },
+        {
+            $lookup: {
+                from: "categories",
+                localField: "category",
+                foreignField: "_id",
+                pipeline: [
+                    {
+                        $project: {
+                            __v: 0,
+                            isDeleted: 0,
+                            status: 0,
+                            createOn: 0
+                        },
+                    }
+                ],
+                as: "categoryDetails"
+            }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "userId",
+                foreignField: "_id",
+                pipeline: [
+                    {
+                        $project: {
+                            __v: 0,
+                            email: 0,
+                            password: 0,
+                            status: 0,
+                            isDeleted: 0,
+                            createOn: 0
+                        },
+                    }
+                ],
+                as: "userDetails"
+            }
+        },
+        {
+            $lookup: {
+                from: "tags",
+                localField: "tag.tagId",
+                foreignField: "_id",
+                pipeline: [
+                    {
+                        $project: {
+                            __v: 0,
+                            status: 0,
+                            isDeleted: 0,
+                            createOn: 0
+                        },
+                    }
+                ],
+                as: "tagDetails"
+            }
+        },
+        {
+            $lookup: {
+                from: "answers",
+                localField: "_id",
+                foreignField: "questionId",
+                pipeline: [
+                    { $match: { "isDeleted": false } },
+                    {
+                        $project: {
+                            __v: 0,
+                            isDeleted: 0,
+                            questionId: 0
+                        },
+                    }
+                ],
+                as: "answers"
+            }
+        },
+        {
+            $addFields: { answerCount: { $size: "$answers" } }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "like" } },
+                ],
+                as: "likes"
+            }
+        },
+        {
+            $addFields: { likeCount: { $size: "$likes" } }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "dislike" } },
+                ],
+                as: "dislikes"
+            }
+        },
+        {
+            $addFields: { dislikeCount: { $size: "$dislikes" } }
+        },
+        {
+            $addFields: { totalVoteCount: { $add: ["$likeCount", "$dislikeCount"] } }
+        },
+        {
+            $sort: {
+                _id: -1
+            }
+        },
+        {
+            $project: {
+                __v: 0,
+                status: 0,
+                isDeleted: 0,
+                tag: 0,
+                category: 0,
+                userId: 0,
+                answers: 0,
+                likes: 0,
+                dislikes: 0
+            }
+        },
+        { $unwind: "$userDetails" },
+        { $unwind: "$categoryDetails" },
+    ]).then((data) => {
+        if (data.length == 0) {
+            return res.status(200).json({
+                status: false,
+                data: null,
+                error: "No Questions Found !!!"
+            });
+        } else {
+            return res.status(200).json({
+                status: true,
+                data: data,
+                error: null
+            });
+        }
+
+    }).catch((error) => {
+        return res.status(200).json({
+            status: false,
+            data: null,
+            error: "Something Went Wrong !!!",
+        });
+    });
+}
+
+
+const search_unanswered_question = async (req, res) => {
+
+    return Question.aggregate([
+        {
+            $match: { isDeleted: false, status: true, title: { $regex: req.body.searchBy, $options: "i" } }
+        },
+        {
+            $lookup: {
+                from: "categories",
+                localField: "category",
+                foreignField: "_id",
+                pipeline: [
+                    {
+                        $project: {
+                            __v: 0,
+                            isDeleted: 0,
+                            status: 0,
+                            createOn: 0
+                        },
+                    }
+                ],
+                as: "categoryDetails"
+            }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "userId",
+                foreignField: "_id",
+                pipeline: [
+                    {
+                        $project: {
+                            __v: 0,
+                            email: 0,
+                            password: 0,
+                            status: 0,
+                            isDeleted: 0,
+                            createOn: 0
+                        },
+                    }
+                ],
+                as: "userDetails"
+            }
+        },
+        {
+            $lookup: {
+                from: "tags",
+                localField: "tag.tagId",
+                foreignField: "_id",
+                pipeline: [
+                    {
+                        $project: {
+                            __v: 0,
+                            description: 0,
+                            status: 0,
+                            isDeleted: 0,
+                            createOn: 0
+                        },
+                    }
+                ],
+                as: "tagDetails"
+            }
+        },
+        {
+            $lookup: {
+                from: "answers",
+                localField: "_id",
+                foreignField: "questionId",
+                pipeline: [
+                    { $match: { "isDeleted": false } },
+                    {
+                        $project: {
+                            __v: 0,
+                            isDeleted: 0,
+                            questionId: 0
+                        },
+                    }
+                ],
+                as: "answers",
+            }
+        },
+        {
+            $addFields: { answerCount: { $size: "$answers" } }
+        },
+        {
+            $match: { "answerCount": 0 }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "like" } },
+                ],
+                as: "likes"
+            }
+        },
+        {
+            $addFields: { likeCount: { $size: "$likes" } }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "dislike" } },
+                ],
+                as: "dislikes"
+            }
+        },
+        {
+            $addFields: { dislikeCount: { $size: "$dislikes" } }
+        },
+        {
+            $addFields: { totalVoteCount: { $add: ["$likeCount", "$dislikeCount"] } }
+        },
+        {
+            $project: {
+                __v: 0,
+                status: 0,
+                isDeleted: 0,
+                category: 0,
+                userId: 0,
+                tag: 0,
+                answers: 0,
+                likes: 0,
+                dislikes: 0
+            },
+        },
+        {
+            $sort: {
+                _id: -1
+            }
+        },
+        { $unwind: "$categoryDetails" },
+        { $unwind: "$userDetails" }
+    ]).then((data) => {
+        if (data.length == 0) {
+            return res.status(200).json({
+                status: false,
+                data: null,
+                error: 'No Question Found !!!'
+            });
+        } else {
+            return res.status(200).json({
+                status: true,
+                data: data,
+                error: null
+            });
+        }
+    }).catch((error) => {
+        return res.status(200).json({
+            status: false,
+            data: null,
+            error: "Something Went Wrong !!!",
+            error_code: error
+        });
+    });
+
+
+}
+
+
+const search_most_answered_questions = async (req, res) => {
+
+    return Question.aggregate([
+        {
+            $match: { isDeleted: false, status: true, title: { $regex: req.body.searchBy, $options: "i" } }
+        },
+        {
+            $lookup: {
+                from: "categories",
+                localField: "category",
+                foreignField: "_id",
+                pipeline: [
+                    {
+                        $project: {
+                            __v: 0,
+                            isDeleted: 0,
+                            status: 0,
+                            createOn: 0
+                        },
+                    }
+                ],
+                as: "categoryDetails"
+            }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "userId",
+                foreignField: "_id",
+                pipeline: [
+                    {
+                        $project: {
+                            __v: 0,
+                            email: 0,
+                            password: 0,
+                            status: 0,
+                            isDeleted: 0,
+                            createOn: 0
+                        },
+                    }
+                ],
+                as: "userDetails"
+            }
+        },
+        {
+            $lookup: {
+                from: "tags",
+                localField: "tag.tagId",
+                foreignField: "_id",
+                pipeline: [
+                    {
+                        $project: {
+                            __v: 0,
+                            description: 0,
+                            status: 0,
+                            isDeleted: 0,
+                            createOn: 0
+                        },
+                    }
+                ],
+                as: "tagDetails"
+            }
+        },
+        {
+            $lookup: {
+                from: "answers",
+                localField: "_id",
+                foreignField: "questionId",
+                pipeline: [
+                    { $match: { "isDeleted": false } },
+                    {
+                        $project: {
+                            __v: 0,
+                            isDeleted: 0,
+                            questionId: 0
+                        },
+                    }
+                ],
+                as: "answers",
+            }
+        },
+        {
+            $addFields: { answerCount: { $size: "$answers" } }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "like" } },
+                ],
+                as: "likes"
+            }
+        },
+        {
+            $addFields: { likeCount: { $size: "$likes" } }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "dislike" } },
+                ],
+                as: "dislikes"
+            }
+        },
+        {
+            $addFields: { dislikeCount: { $size: "$dislikes" } }
+        },
+        {
+            $addFields: { totalVoteCount: { $add: ["$likeCount", "$dislikeCount"] } }
+        },
+        {
+            $sort: {
+                "answerCount": -1
+            }
+        },
+        {
+            $project: {
+                __v: 0,
+                status: 0,
+                isDeleted: 0,
+                category: 0,
+                userId: 0,
+                tag: 0,
+                answers: 0,
+                likes: 0,
+                dislikes: 0
+            },
+        },
+        { $unwind: "$categoryDetails" },
+        { $unwind: "$userDetails" }
+    ]).then((data) => {
+        if (data.length == 0) {
+            return res.status(200).json({
+                status: false,
+                data: null,
+                error: "No Questions Found !!!"
+            });
+        } else {
+            return res.status(200).json({
+                status: true,
+                data: data,
+                error: null
+            });
+        }
+    }).catch((error) => {
+        return res.status(200).json({
+            status: false,
+            data: null,
+            error: "Something Went Wrong !!!",
+            error_code: error
+        });
+    });
+
+}
+
+
 
 module.exports = {
     create,
@@ -1063,6 +2250,10 @@ module.exports = {
     category_wise_no_answered_ques,
     category_wise_most_answered_ques,
     tag_wise_all_ques,
-    tag_wise_most_answered_ques
+    tag_wise_unanswered_ques,
+    tag_wise_most_answered_ques,
+    search_data,
+    search_unanswered_question,
+    search_most_answered_questions
 
 }

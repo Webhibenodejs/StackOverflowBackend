@@ -65,7 +65,7 @@ const checkFollowing = (req, res) => {
             });
         } else {
             res.status(200).json({
-                status: true,
+                status: false,
                 data: 'Not Yet Follwed !!!!',
                 error: null
             });
@@ -77,7 +77,6 @@ const unfollow = (req, res) => {
     return Follow.remove({
         followingUserId: mongoose.Types.ObjectId(req.body.followingUserId), sessionUserId: mongoose.Types.ObjectId(req.body.sessionUserId)
     }).then((data) => {
-
         if (data.deletedCount == 0) {
             return res.status(200).json({
                 status: false,
