@@ -5,12 +5,11 @@ const create = (req, res) => {
         name: req.body.name,
         email: req.body.email,
         password: req.body.password,
-        terms_conditions: req.body.terms_conditions,
         createOn: new Date()
     }
 
     const dataModel = new SignUp(dataSet);
-
+   
     if (req.body.terms_conditions == true) {
         dataModel.save()
             .then((result) => {

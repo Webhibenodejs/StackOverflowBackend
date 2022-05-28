@@ -20,7 +20,7 @@ const UserSchema = new mongoose.Schema({
     },
     bio : {
         type : String,
-        required : true
+        required : false
     },
     status : {
         type : Boolean,
