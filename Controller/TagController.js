@@ -5,7 +5,7 @@ var mongoose = require('mongoose');
 const create = (req, res) => {
     let dataSet = {
         tag: req.body.tag,
-        description : req.body.description,
+        description: req.body.description,
         createOn: new Date()
     }
     const dataModel = new Tag(dataSet);
@@ -31,10 +31,25 @@ const viewall = (req, res) => {
             $match: { isDeleted: false, status: true }
         },
         {
+            $lookup: {
+                from: "questions",
+                localField: "_id",
+                foreignField: "tag.tagId",
+                pipeline: [
+                    { $match: { isDeleted: false, status: true } },
+                ],
+                as: "total_question"
+            }
+        },
+        {
+            $addFields: { totalQuestionCount: { $size: "$total_question" } }
+        },
+        {
             $project: {
                 __v: 0,
                 status: 0,
-                isDeleted: 0
+                isDeleted: 0,
+                total_question:0
             },
         },
         {
@@ -79,7 +94,7 @@ const update_data = (req, res) => {
 }
 
 const delete_data = (req, res) => {
-   
+
     return Tag.findOneAndUpdate(
         { "_id": mongoose.Types.ObjectId(req.params.id) },
         { isDeleted: true }
@@ -108,5 +123,5 @@ module.exports = {
     viewall,
     update_data,
     delete_data
-   
+
 }

@@ -100,6 +100,8 @@ router.get('/blog_view_all', BlogController.viewall)
 router.put('/blog_update/:id', BlogController.update_data)
 router.put('/blog_delete/:id', BlogController.delete_data)
 router.get('/blog_single_view/:id', BlogController.viewsingle)
+router.get('/recent_blogs', BlogController.recent_blogs)
+
 // blog crud end
 
 // contact_us start

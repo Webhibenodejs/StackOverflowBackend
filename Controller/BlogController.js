@@ -119,6 +119,46 @@ const delete_data = (req, res) => {
 
 }
 
+const recent_blogs = (req, res) => {
+    return Blog.aggregate([
+        {
+            $match: { isDeleted: false, status: true }
+        },
+        {
+            $project: {
+                __v: 0,
+                category:0,
+                blog_desc:0,
+                blog_writer:0,
+                createOn:0,
+                status: 0,
+                isDeleted: 0
+            },
+        },
+        {
+            $sort: {
+                _id: -1
+            }
+        },
+        { $limit: 10 }
+    ])
+        .then((data) => {
+            return res.status(200).json({
+                status: true,
+                data: data,
+                error: null
+            });
+        })
+        .catch((error) => {
+            return res.status(200).json({
+                status: false,
+                data: null,
+                error: "Something Went Wrong !!!",
+            });
+        });
+}
+
+
 const viewsingle = (req, res) => {
     return Blog.aggregate([
         {
@@ -158,5 +198,6 @@ module.exports = {
     viewall,
     update_data,
     delete_data,
-    viewsingle
+    viewsingle,
+    recent_blogs
 }
