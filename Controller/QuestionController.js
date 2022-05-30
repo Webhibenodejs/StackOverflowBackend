@@ -145,6 +145,34 @@ const viewall = (req, res) => {
             $addFields: { totalVoteCount: { $add: ["$likeCount", "$dislikeCount"] } }
         },
         {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "like", userId: mongoose.Types.ObjectId(req.body.loginUserId) } },
+                ],
+                as: "this_user_like"
+            }
+        },
+        {
+            $addFields: { this_user_like_count: { $size: "$this_user_like" } }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "dislike", userId: mongoose.Types.ObjectId(req.body.loginUserId) } },
+                ],
+                as: "this_user_dislike"
+            }
+        },
+        {
+            $addFields: { this_user_dislike_count: { $size: "$this_user_dislike" } }
+        },
+        {
             $sort: {
                 _id: -1
             }
@@ -159,7 +187,9 @@ const viewall = (req, res) => {
                 userId: 0,
                 answers: 0,
                 likes: 0,
-                dislikes: 0
+                dislikes: 0,
+                this_user_like: 0,
+                this_user_dislike: 0
             }
         },
         { $unwind: "$userDetails" },
@@ -250,7 +280,7 @@ const delete_data = (req, res) => {
 const single_ques_fetch = (req, res) => {
     return Question.aggregate([
         {
-            $match: { "_id": mongoose.Types.ObjectId(req.params.id), "status": true, "isDeleted": false }
+            $match: { "_id": mongoose.Types.ObjectId(req.body.questionId), "status": true, "isDeleted": false }
         },
         {
             $lookup: {
@@ -374,9 +404,39 @@ const single_ques_fetch = (req, res) => {
                         $addFields: { totalAnswerVoteCount: { $add: ["$answerLikeCount", "$answerDislikeCount"] } }
                     },
                     {
-                        $project:{
-                            answer_likes:0,
-                            answer_dislikes:0
+                        $lookup: {
+                            from: "votes",
+                            localField: "_id",
+                            foreignField: "ques_ans_id",
+                            pipeline: [
+                                { $match: { "ques_ans_type": "answer", isDeleted: false, status: true, like_dislike_type: "like", userId: mongoose.Types.ObjectId(req.body.loginUserId) } },
+                            ],
+                            as: "this_user_like"
+                        }
+                    },
+                    {
+                        $addFields: { this_user_like_count: { $size: "$this_user_like" } }
+                    },
+                    {
+                        $lookup: {
+                            from: "votes",
+                            localField: "_id",
+                            foreignField: "ques_ans_id",
+                            pipeline: [
+                                { $match: { "ques_ans_type": "answer", isDeleted: false, status: true, like_dislike_type: "dislike", userId: mongoose.Types.ObjectId(req.body.loginUserId) } },
+                            ],
+                            as: "this_user_dislike"
+                        }
+                    },
+                    {
+                        $addFields: { this_user_dislike_count: { $size: "$this_user_dislike" } }
+                    },
+                    {
+                        $project: {
+                            answer_likes: 0,
+                            answer_dislikes: 0,
+                            this_user_like: 0,
+                            this_user_dislike: 0
                         }
                     }
                 ],
@@ -417,6 +477,34 @@ const single_ques_fetch = (req, res) => {
         {
             $addFields: { totalVoteCount: { $add: ["$likeCount", "$dislikeCount"] } }
         },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "like", userId: mongoose.Types.ObjectId(req.body.loginUserId) } },
+                ],
+                as: "this_user_like"
+            }
+        },
+        {
+            $addFields: { this_user_like_count: { $size: "$this_user_like" } }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "dislike", userId: mongoose.Types.ObjectId(req.body.loginUserId) } },
+                ],
+                as: "this_user_dislike"
+            }
+        },
+        {
+            $addFields: { this_user_dislike_count: { $size: "$this_user_dislike" } }
+        },
         { $unwind: "$questionUserDetails" },
         { $unwind: "$categoryDetails" },
         {
@@ -428,7 +516,9 @@ const single_ques_fetch = (req, res) => {
                 category: 0,
                 userId: 0,
                 likes: 0,
-                dislikes: 0
+                dislikes: 0,
+                this_user_like: 0,
+                this_user_dislike: 0
             },
         },
     ]).then((data) => {
@@ -572,6 +662,34 @@ const no_answered_ques = (req, res) => {
             $addFields: { totalVoteCount: { $add: ["$likeCount", "$dislikeCount"] } }
         },
         {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "like", userId: mongoose.Types.ObjectId(req.body.loginUserId) } },
+                ],
+                as: "this_user_like"
+            }
+        },
+        {
+            $addFields: { this_user_like_count: { $size: "$this_user_like" } }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "dislike", userId: mongoose.Types.ObjectId(req.body.loginUserId) } },
+                ],
+                as: "this_user_dislike"
+            }
+        },
+        {
+            $addFields: { this_user_dislike_count: { $size: "$this_user_dislike" } }
+        },
+        {
             $project: {
                 __v: 0,
                 status: 0,
@@ -581,7 +699,9 @@ const no_answered_ques = (req, res) => {
                 tag: 0,
                 answers: 0,
                 likes: 0,
-                dislikes: 0
+                dislikes: 0,
+                this_user_like: 0,
+                this_user_dislike: 0
             },
         },
         {
@@ -731,6 +851,34 @@ const most_answered_ques = (req, res) => {
             $addFields: { totalVoteCount: { $add: ["$likeCount", "$dislikeCount"] } }
         },
         {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "like", userId: mongoose.Types.ObjectId(req.body.loginUserId) } },
+                ],
+                as: "this_user_like"
+            }
+        },
+        {
+            $addFields: { this_user_like_count: { $size: "$this_user_like" } }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "dislike", userId: mongoose.Types.ObjectId(req.body.loginUserId) } },
+                ],
+                as: "this_user_dislike"
+            }
+        },
+        {
+            $addFields: { this_user_dislike_count: { $size: "$this_user_dislike" } }
+        },
+        {
             $sort: {
                 "answerCount": -1
             }
@@ -745,7 +893,9 @@ const most_answered_ques = (req, res) => {
                 tag: 0,
                 answers: 0,
                 likes: 0,
-                dislikes: 0
+                dislikes: 0,
+                this_user_like: 0,
+                this_user_dislike: 0
             },
         },
         { $unwind: "$categoryDetails" },
@@ -780,7 +930,7 @@ const category_wise_all_ques = (req, res) => {
 
     return Question.aggregate([
         {
-            $match: { isDeleted: false, status: true, category: mongoose.Types.ObjectId(req.params.id) }
+            $match: { isDeleted: false, status: true, category: mongoose.Types.ObjectId(req.body.category) }
         },
         {
             $lookup: {
@@ -792,6 +942,7 @@ const category_wise_all_ques = (req, res) => {
                         $project: {
                             __v: 0,
                             isDeleted: 0,
+                            // _id: 0,
                             status: 0,
                             createOn: 0
                         },
@@ -891,6 +1042,34 @@ const category_wise_all_ques = (req, res) => {
             $addFields: { totalVoteCount: { $add: ["$likeCount", "$dislikeCount"] } }
         },
         {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "like", userId: mongoose.Types.ObjectId(req.body.loginUserId) } },
+                ],
+                as: "this_user_like"
+            }
+        },
+        {
+            $addFields: { this_user_like_count: { $size: "$this_user_like" } }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "dislike", userId: mongoose.Types.ObjectId(req.body.loginUserId) } },
+                ],
+                as: "this_user_dislike"
+            }
+        },
+        {
+            $addFields: { this_user_dislike_count: { $size: "$this_user_dislike" } }
+        },
+        {
             $sort: {
                 _id: -1
             }
@@ -905,7 +1084,9 @@ const category_wise_all_ques = (req, res) => {
                 userId: 0,
                 answers: 0,
                 likes: 0,
-                dislikes: 0
+                dislikes: 0,
+                this_user_like: 0,
+                this_user_dislike: 0
             }
         },
         { $unwind: "$userDetails" },
@@ -915,7 +1096,7 @@ const category_wise_all_ques = (req, res) => {
             return res.status(200).json({
                 status: false,
                 data: null,
-                error: "No Questions Found !!!!"
+                error: "No Questions Found !!!"
             });
         } else {
             return res.status(200).json({
@@ -939,7 +1120,7 @@ const category_wise_no_answered_ques = (req, res) => {
 
     return Question.aggregate([
         {
-            $match: { isDeleted: false, status: true, category: mongoose.Types.ObjectId(req.params.id) }
+            $match: { isDeleted: false, status: true, category: mongoose.Types.ObjectId(req.body.category) }
         },
         {
             $lookup: {
@@ -1054,6 +1235,34 @@ const category_wise_no_answered_ques = (req, res) => {
             $addFields: { totalVoteCount: { $add: ["$likeCount", "$dislikeCount"] } }
         },
         {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "like", userId: mongoose.Types.ObjectId(req.body.loginUserId) } },
+                ],
+                as: "this_user_like"
+            }
+        },
+        {
+            $addFields: { this_user_like_count: { $size: "$this_user_like" } }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "dislike", userId: mongoose.Types.ObjectId(req.body.loginUserId) } },
+                ],
+                as: "this_user_dislike"
+            }
+        },
+        {
+            $addFields: { this_user_dislike_count: { $size: "$this_user_dislike" } }
+        },
+        {
             $project: {
                 __v: 0,
                 status: 0,
@@ -1063,7 +1272,9 @@ const category_wise_no_answered_ques = (req, res) => {
                 tag: 0,
                 answers: 0,
                 likes: 0,
-                dislikes: 0
+                dislikes: 0,
+                this_user_like: 0,
+                this_user_dislike: 0
             },
         },
         {
@@ -1101,9 +1312,10 @@ const category_wise_no_answered_ques = (req, res) => {
 
 const category_wise_most_answered_ques = (req, res) => {
 
+
     return Question.aggregate([
         {
-            $match: { isDeleted: false, status: true, category: mongoose.Types.ObjectId(req.params.id) }
+            $match: { isDeleted: false, status: true, category: mongoose.Types.ObjectId(req.body.category) }
         },
         {
             $lookup: {
@@ -1215,6 +1427,34 @@ const category_wise_most_answered_ques = (req, res) => {
             $addFields: { totalVoteCount: { $add: ["$likeCount", "$dislikeCount"] } }
         },
         {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "like", userId: mongoose.Types.ObjectId(req.body.loginUserId) } },
+                ],
+                as: "this_user_like"
+            }
+        },
+        {
+            $addFields: { this_user_like_count: { $size: "$this_user_like" } }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "dislike", userId: mongoose.Types.ObjectId(req.body.loginUserId) } },
+                ],
+                as: "this_user_dislike"
+            }
+        },
+        {
+            $addFields: { this_user_dislike_count: { $size: "$this_user_dislike" } }
+        },
+        {
             $sort: {
                 "answerCount": -1
             }
@@ -1229,8 +1469,10 @@ const category_wise_most_answered_ques = (req, res) => {
                 tag: 0,
                 answers: 0,
                 likes: 0,
-                dislikes: 0
-            }
+                dislikes: 0,
+                this_user_like: 0,
+                this_user_dislike: 0
+            },
         },
         { $unwind: "$categoryDetails" },
         { $unwind: "$userDetails" }
@@ -1248,7 +1490,6 @@ const category_wise_most_answered_ques = (req, res) => {
                 error: null
             });
         }
-
     }).catch((error) => {
         return res.status(200).json({
             status: false,
@@ -1263,10 +1504,9 @@ const category_wise_most_answered_ques = (req, res) => {
 
 
 const tag_wise_all_ques = (req, res) => {
-
     return Question.aggregate([
         {
-            $match: { isDeleted: false, status: true, 'tag.tagId': mongoose.Types.ObjectId(req.params.id) }
+            $match: { isDeleted: false, status: true, 'tag.tagId': mongoose.Types.ObjectId(req.body.tagId) }
         },
         {
             $lookup: {
@@ -1278,6 +1518,7 @@ const tag_wise_all_ques = (req, res) => {
                         $project: {
                             __v: 0,
                             isDeleted: 0,
+                            // _id: 0,
                             status: 0,
                             createOn: 0
                         },
@@ -1377,6 +1618,34 @@ const tag_wise_all_ques = (req, res) => {
             $addFields: { totalVoteCount: { $add: ["$likeCount", "$dislikeCount"] } }
         },
         {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "like", userId: mongoose.Types.ObjectId(req.body.loginUserId) } },
+                ],
+                as: "this_user_like"
+            }
+        },
+        {
+            $addFields: { this_user_like_count: { $size: "$this_user_like" } }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "dislike", userId: mongoose.Types.ObjectId(req.body.loginUserId) } },
+                ],
+                as: "this_user_dislike"
+            }
+        },
+        {
+            $addFields: { this_user_dislike_count: { $size: "$this_user_dislike" } }
+        },
+        {
             $sort: {
                 _id: -1
             }
@@ -1391,7 +1660,9 @@ const tag_wise_all_ques = (req, res) => {
                 userId: 0,
                 answers: 0,
                 likes: 0,
-                dislikes: 0
+                dislikes: 0,
+                this_user_like: 0,
+                this_user_dislike: 0
             }
         },
         { $unwind: "$userDetails" },
@@ -1408,9 +1679,8 @@ const tag_wise_all_ques = (req, res) => {
                 status: true,
                 data: data,
                 error: null
-            }); d
+            });
         }
-
     }).catch((error) => {
         return res.status(200).json({
             status: false,
@@ -1418,16 +1688,15 @@ const tag_wise_all_ques = (req, res) => {
             error: "Something Went Wrong !!!",
         });
     });
-
-
 }
 
 
 const tag_wise_unanswered_ques = (req, res) => {
 
+
     return Question.aggregate([
         {
-            $match: { isDeleted: false, status: true, 'tag.tagId': mongoose.Types.ObjectId(req.params.id) }
+            $match: { isDeleted: false, status: true, 'tag.tagId': mongoose.Types.ObjectId(req.body.tagId) }
         },
         {
             $lookup: {
@@ -1542,6 +1811,34 @@ const tag_wise_unanswered_ques = (req, res) => {
             $addFields: { totalVoteCount: { $add: ["$likeCount", "$dislikeCount"] } }
         },
         {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "like", userId: mongoose.Types.ObjectId(req.body.loginUserId) } },
+                ],
+                as: "this_user_like"
+            }
+        },
+        {
+            $addFields: { this_user_like_count: { $size: "$this_user_like" } }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "dislike", userId: mongoose.Types.ObjectId(req.body.loginUserId) } },
+                ],
+                as: "this_user_dislike"
+            }
+        },
+        {
+            $addFields: { this_user_dislike_count: { $size: "$this_user_dislike" } }
+        },
+        {
             $project: {
                 __v: 0,
                 status: 0,
@@ -1551,7 +1848,9 @@ const tag_wise_unanswered_ques = (req, res) => {
                 tag: 0,
                 answers: 0,
                 likes: 0,
-                dislikes: 0
+                dislikes: 0,
+                this_user_like: 0,
+                this_user_dislike: 0
             },
         },
         {
@@ -1583,6 +1882,8 @@ const tag_wise_unanswered_ques = (req, res) => {
             error_code: error
         });
     });
+
+
 }
 
 
@@ -1590,7 +1891,7 @@ const tag_wise_most_answered_ques = async (req, res) => {
 
     return Question.aggregate([
         {
-            $match: { isDeleted: false, status: true, 'tag.tagId': mongoose.Types.ObjectId(req.params.id) }
+            $match: { isDeleted: false, status: true, 'tag.tagId': mongoose.Types.ObjectId(req.body.tagId) }
         },
         {
             $lookup: {
@@ -1702,6 +2003,34 @@ const tag_wise_most_answered_ques = async (req, res) => {
             $addFields: { totalVoteCount: { $add: ["$likeCount", "$dislikeCount"] } }
         },
         {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "like", userId: mongoose.Types.ObjectId(req.body.loginUserId) } },
+                ],
+                as: "this_user_like"
+            }
+        },
+        {
+            $addFields: { this_user_like_count: { $size: "$this_user_like" } }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "dislike", userId: mongoose.Types.ObjectId(req.body.loginUserId) } },
+                ],
+                as: "this_user_dislike"
+            }
+        },
+        {
+            $addFields: { this_user_dislike_count: { $size: "$this_user_dislike" } }
+        },
+        {
             $sort: {
                 "answerCount": -1
             }
@@ -1716,7 +2045,9 @@ const tag_wise_most_answered_ques = async (req, res) => {
                 tag: 0,
                 answers: 0,
                 likes: 0,
-                dislikes: 0
+                dislikes: 0,
+                this_user_like: 0,
+                this_user_dislike: 0
             },
         },
         { $unwind: "$categoryDetails" },
@@ -1726,15 +2057,13 @@ const tag_wise_most_answered_ques = async (req, res) => {
             return res.status(200).json({
                 status: false,
                 data: null,
-                error: "No Quesions Found !!!",
-
+                error: "No Questions Found !!!"
             });
         } else {
             return res.status(200).json({
                 status: true,
                 data: data,
-                error: null,
-
+                error: null
             });
         }
     }).catch((error) => {
@@ -1745,10 +2074,207 @@ const tag_wise_most_answered_ques = async (req, res) => {
             error_code: error
         });
     });
+
+
+
 }
 
 
 const search_data = async (req, res) => {
+
+    return Question.aggregate([
+        {
+            $match: {
+                title: { $regex: req.body.searchBy, $options: "i" },
+                isDeleted: false,
+                status: true
+            }
+        },
+        {
+            $lookup: {
+                from: "categories",
+                localField: "category",
+                foreignField: "_id",
+                pipeline: [
+                    {
+                        $project: {
+                            __v: 0,
+                            isDeleted: 0,
+                            // _id: 0,
+                            status: 0,
+                            createOn: 0
+                        },
+                    }
+                ],
+                as: "categoryDetails"
+            }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "userId",
+                foreignField: "_id",
+                pipeline: [
+                    {
+                        $project: {
+                            __v: 0,
+                            email: 0,
+                            password: 0,
+                            status: 0,
+                            isDeleted: 0,
+                            createOn: 0
+                        },
+                    }
+                ],
+                as: "userDetails"
+            }
+        },
+        {
+            $lookup: {
+                from: "tags",
+                localField: "tag.tagId",
+                foreignField: "_id",
+                pipeline: [
+                    {
+                        $project: {
+                            __v: 0,
+                            status: 0,
+                            isDeleted: 0,
+                            createOn: 0
+                        },
+                    }
+                ],
+                as: "tagDetails"
+            }
+        },
+        {
+            $lookup: {
+                from: "answers",
+                localField: "_id",
+                foreignField: "questionId",
+                pipeline: [
+                    { $match: { "isDeleted": false } },
+                    {
+                        $project: {
+                            __v: 0,
+                            isDeleted: 0,
+                            questionId: 0
+                        },
+                    }
+                ],
+                as: "answers"
+            }
+        },
+        {
+            $addFields: { answerCount: { $size: "$answers" } }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "like" } },
+                ],
+                as: "likes"
+            }
+        },
+        {
+            $addFields: { likeCount: { $size: "$likes" } }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "dislike" } },
+                ],
+                as: "dislikes"
+            }
+        },
+        {
+            $addFields: { dislikeCount: { $size: "$dislikes" } }
+        },
+        {
+            $addFields: { totalVoteCount: { $add: ["$likeCount", "$dislikeCount"] } }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "like", userId: mongoose.Types.ObjectId(req.body.loginUserId) } },
+                ],
+                as: "this_user_like"
+            }
+        },
+        {
+            $addFields: { this_user_like_count: { $size: "$this_user_like" } }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "dislike", userId: mongoose.Types.ObjectId(req.body.loginUserId) } },
+                ],
+                as: "this_user_dislike"
+            }
+        },
+        {
+            $addFields: { this_user_dislike_count: { $size: "$this_user_dislike" } }
+        },
+        {
+            $sort: {
+                _id: -1
+            }
+        },
+        {
+            $project: {
+                __v: 0,
+                status: 0,
+                isDeleted: 0,
+                tag: 0,
+                category: 0,
+                userId: 0,
+                answers: 0,
+                likes: 0,
+                dislikes: 0,
+                this_user_like: 0,
+                this_user_dislike: 0
+            }
+        },
+        { $unwind: "$userDetails" },
+        { $unwind: "$categoryDetails" },
+    ]).then((data) => {
+        if (data.length == 0) {
+            return res.status(200).json({
+                status: false,
+                data: null,
+                error: "No Questions Found !!!"
+            });
+        } else {
+            return res.status(200).json({
+                status: true,
+                data: data,
+                error: null
+            });
+        }
+    }).catch((error) => {
+        return res.status(200).json({
+            status: false,
+            data: null,
+            error: "Something Went Wrong !!!",
+        });
+    });
+
+}
+
+
+const search_unanswered_question = async (req, res) => {
 
     return Question.aggregate([
         {
@@ -1805,165 +2331,6 @@ const search_data = async (req, res) => {
                     {
                         $project: {
                             __v: 0,
-                            status: 0,
-                            isDeleted: 0,
-                            createOn: 0
-                        },
-                    }
-                ],
-                as: "tagDetails"
-            }
-        },
-        {
-            $lookup: {
-                from: "answers",
-                localField: "_id",
-                foreignField: "questionId",
-                pipeline: [
-                    { $match: { "isDeleted": false } },
-                    {
-                        $project: {
-                            __v: 0,
-                            isDeleted: 0,
-                            questionId: 0
-                        },
-                    }
-                ],
-                as: "answers"
-            }
-        },
-        {
-            $addFields: { answerCount: { $size: "$answers" } }
-        },
-        {
-            $lookup: {
-                from: "votes",
-                localField: "_id",
-                foreignField: "ques_ans_id",
-                pipeline: [
-                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "like" } },
-                ],
-                as: "likes"
-            }
-        },
-        {
-            $addFields: { likeCount: { $size: "$likes" } }
-        },
-        {
-            $lookup: {
-                from: "votes",
-                localField: "_id",
-                foreignField: "ques_ans_id",
-                pipeline: [
-                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "dislike" } },
-                ],
-                as: "dislikes"
-            }
-        },
-        {
-            $addFields: { dislikeCount: { $size: "$dislikes" } }
-        },
-        {
-            $addFields: { totalVoteCount: { $add: ["$likeCount", "$dislikeCount"] } }
-        },
-        {
-            $sort: {
-                _id: -1
-            }
-        },
-        {
-            $project: {
-                __v: 0,
-                status: 0,
-                isDeleted: 0,
-                tag: 0,
-                category: 0,
-                userId: 0,
-                answers: 0,
-                likes: 0,
-                dislikes: 0
-            }
-        },
-        { $unwind: "$userDetails" },
-        { $unwind: "$categoryDetails" },
-    ]).then((data) => {
-        if (data.length == 0) {
-            return res.status(200).json({
-                status: false,
-                data: null,
-                error: "No Questions Found !!!"
-            });
-        } else {
-            return res.status(200).json({
-                status: true,
-                data: data,
-                error: null
-            });
-        }
-
-    }).catch((error) => {
-        return res.status(200).json({
-            status: false,
-            data: null,
-            error: "Something Went Wrong !!!",
-        });
-    });
-}
-
-
-const search_unanswered_question = async (req, res) => {
-
-    return Question.aggregate([
-        {
-            $match: { isDeleted: false, status: true, title: { $regex: req.body.searchBy, $options: "i" } }
-        },
-        {
-            $lookup: {
-                from: "categories",
-                localField: "category",
-                foreignField: "_id",
-                pipeline: [
-                    {
-                        $project: {
-                            __v: 0,
-                            isDeleted: 0,
-                            status: 0,
-                            createOn: 0
-                        },
-                    }
-                ],
-                as: "categoryDetails"
-            }
-        },
-        {
-            $lookup: {
-                from: "users",
-                localField: "userId",
-                foreignField: "_id",
-                pipeline: [
-                    {
-                        $project: {
-                            __v: 0,
-                            email: 0,
-                            password: 0,
-                            status: 0,
-                            isDeleted: 0,
-                            createOn: 0
-                        },
-                    }
-                ],
-                as: "userDetails"
-            }
-        },
-        {
-            $lookup: {
-                from: "tags",
-                localField: "tag.tagId",
-                foreignField: "_id",
-                pipeline: [
-                    {
-                        $project: {
-                            __v: 0,
                             description: 0,
                             status: 0,
                             isDeleted: 0,
@@ -2030,6 +2397,34 @@ const search_unanswered_question = async (req, res) => {
             $addFields: { totalVoteCount: { $add: ["$likeCount", "$dislikeCount"] } }
         },
         {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "like", userId: mongoose.Types.ObjectId(req.body.loginUserId) } },
+                ],
+                as: "this_user_like"
+            }
+        },
+        {
+            $addFields: { this_user_like_count: { $size: "$this_user_like" } }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "dislike", userId: mongoose.Types.ObjectId(req.body.loginUserId) } },
+                ],
+                as: "this_user_dislike"
+            }
+        },
+        {
+            $addFields: { this_user_dislike_count: { $size: "$this_user_dislike" } }
+        },
+        {
             $project: {
                 __v: 0,
                 status: 0,
@@ -2039,7 +2434,9 @@ const search_unanswered_question = async (req, res) => {
                 tag: 0,
                 answers: 0,
                 likes: 0,
-                dislikes: 0
+                dislikes: 0,
+                this_user_like: 0,
+                this_user_dislike: 0
             },
         },
         {
@@ -2073,6 +2470,7 @@ const search_unanswered_question = async (req, res) => {
     });
 
 
+
 }
 
 
@@ -2080,7 +2478,11 @@ const search_most_answered_questions = async (req, res) => {
 
     return Question.aggregate([
         {
-            $match: { isDeleted: false, status: true, title: { $regex: req.body.searchBy, $options: "i" } }
+            $match: {
+                title: { $regex: req.body.searchBy, $options: "i" },
+                isDeleted: false,
+                status: true
+            }
         },
         {
             $lookup: {
@@ -2192,6 +2594,34 @@ const search_most_answered_questions = async (req, res) => {
             $addFields: { totalVoteCount: { $add: ["$likeCount", "$dislikeCount"] } }
         },
         {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "like", userId: mongoose.Types.ObjectId(req.body.loginUserId) } },
+                ],
+                as: "this_user_like"
+            }
+        },
+        {
+            $addFields: { this_user_like_count: { $size: "$this_user_like" } }
+        },
+        {
+            $lookup: {
+                from: "votes",
+                localField: "_id",
+                foreignField: "ques_ans_id",
+                pipeline: [
+                    { $match: { "ques_ans_type": "question", isDeleted: false, status: true, like_dislike_type: "dislike", userId: mongoose.Types.ObjectId(req.body.loginUserId) } },
+                ],
+                as: "this_user_dislike"
+            }
+        },
+        {
+            $addFields: { this_user_dislike_count: { $size: "$this_user_dislike" } }
+        },
+        {
             $sort: {
                 "answerCount": -1
             }
@@ -2206,7 +2636,9 @@ const search_most_answered_questions = async (req, res) => {
                 tag: 0,
                 answers: 0,
                 likes: 0,
-                dislikes: 0
+                dislikes: 0,
+                this_user_like: 0,
+                this_user_dislike: 0
             },
         },
         { $unwind: "$categoryDetails" },
